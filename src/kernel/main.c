@@ -1,6 +1,7 @@
 #include "gdt.h"
 #include "idt.h"
 #include "keyboard.h"
+#include "kheap.h"
 #include "multiboot.h"
 #include "paging.h"
 #include "pmm.h"
@@ -63,6 +64,14 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
   init_paging();
   print("[OK] MEM: Virtual Memory (Paging) enabled\n");
 
+  // Initialize Kernel Heap Allocator
+  uint32_t heap_phys = pmm_alloc_page();
+  // Map one 4KB page for testing the heap initially
+  map_page(heap_phys, heap_phys, PAGE_PRESENT | PAGE_RW);
+  kheap_init(heap_phys, PAGE_SIZE);
+
+  print("[OK] MEM: Kernel dynamic heap allocator initialized\n");
+
   // Start Drivers
   init_timer(50); // 50 Hz
   init_keyboard();
@@ -72,13 +81,19 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
   print("[OK] DRV: Keyboard driver started\n\n");
 
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK));
-  print("Memory mapped successfully via CR3!\n");
-  print("Trying memory allocation test: \n");
-  uint32_t p = pmm_alloc_page();
-  print("Allocated physical page at: ");
-  print_hex(p);
+  print("Memory subsystems passed CR3 / Malloc tests!\n");
+
+  // kmalloc test
+  uint32_t *test_ptr_1 = (uint32_t *)kmalloc(sizeof(uint32_t) * 10);
+  print("`kmalloc` test -> allocated 40 bytes at: ");
+  print_hex((uint32_t)test_ptr_1);
   print("\n");
-  pmm_free_page(p);
+  uint32_t *test_ptr_2 = (uint32_t *)kmalloc(sizeof(uint32_t) * 10);
+  print("`kmalloc` test -> allocated 40 bytes at: ");
+  print_hex((uint32_t)test_ptr_2);
+  print("\n");
+  print("`kfree` -> freeing first chunk... \n");
+  kfree(test_ptr_1);
   print("> ");
 
   // To test page fault uncomment this line:
