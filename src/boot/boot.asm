@@ -35,6 +35,11 @@ _start:
 	mov esp, stack_top
 
 	; Enter the high-level kernel.
+	; The bootloader places the multiboot magic into eax and the
+	; multiboot information structure pointer into ebx.
+	push eax
+	push ebx
+
 	extern kernel_main
 	call kernel_main
 

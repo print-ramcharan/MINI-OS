@@ -3,6 +3,7 @@ ENTRY(_start)
 SECTIONS {
     /* The kernel will live at 1MB in physical memory */
     . = 1M;
+    __kernel_start = .;
 
     /* First put the multiboot header, as it is required to be put very early
        in the image or the bootloader won't recognize the file format.
@@ -27,4 +28,6 @@ SECTIONS {
         *(COMMON)
         *(.bss)
     }
+    
+    __kernel_end = .;
 }
