@@ -1,17 +1,22 @@
-#include <stdint.h>
-#include <stddef.h>
+#include "gdt.h"
+#include "vga.h"
 
 void kernel_main() {
-    uint16_t* vga = (uint16_t*) 0xB8000;
-    
-    // Clear screen
-    for (int i = 0; i < 80 * 25; i++) {
-        vga[i] = (uint16_t) ' ' | (uint16_t) 15 << 8;
-    }
+  // Stage 1: Core CPU Setup
+  gdt_install();
 
-    // Print OK
-    vga[0] = (uint16_t) 'O' | (uint16_t) 15 << 8;
-    vga[1] = (uint16_t) 'K' | (uint16_t) 15 << 8;
-    
-    while(1) {}
+  // Stage 2: Hardware Init
+  terminal_initialize();
+
+  terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK));
+  print("==================================\n");
+  print("       MINI OS KERNEL V1.0        \n");
+  print("==================================\n\n");
+
+  terminal_setcolor(vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+  print("[OK] CPU: Global Descriptor Table loaded\n");
+  print("[OK] DRV: VGA Text Mode initialized\n");
+
+  while (1) {
+  }
 }
