@@ -6,6 +6,7 @@
 #include "paging.h"
 #include "pmm.h"
 #include "scheduler.h"
+#include "syscall.h"
 #include "timer.h"
 #include "vga.h"
 
@@ -14,6 +15,14 @@ extern uint32_t __kernel_start;
 extern uint32_t __kernel_end;
 
 void task_a() {
+  char *hello = " [Syscall from Task A!] ";
+
+  // Invoke SYS_WRITE (eax=1, ebx=string_ptr)
+  asm volatile("mov $1, %%eax; mov %0, %%ebx; int $0x80"
+               :
+               : "r"(hello)
+               : "eax", "ebx");
+
   while (1) {
     print("A");
     // A busy-wait loop to slow it down for visibility
@@ -34,6 +43,7 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
   // Stage 1: Core CPU Setup
   gdt_install();
   idt_install();
+  syscall_init();
 
   // Stage 2: Hardware Init
   terminal_initialize();
