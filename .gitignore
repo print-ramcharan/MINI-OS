@@ -1,0 +1,18 @@
+# Object files
+*.o
+*.out
+
+# Kernel binaries
+kernel.bin
+os.bin
+*.iso
+isodir/
+
+# Emulator generated files
+*.img
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
