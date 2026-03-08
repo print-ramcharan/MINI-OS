@@ -1,5 +1,6 @@
 #include "timer.h"
 #include "idt.h"
+#include "scheduler.h"
 
 static inline void outb_timer(uint16_t port, uint8_t val) {
   asm volatile("outb %0, %1" : : "a"(val), "Nd"(port));
@@ -9,7 +10,8 @@ uint32_t tick = 0;
 
 static void timer_callback(registers_t *regs) {
   tick++;
-  // We can also trigger the scheduler here later
+  // Trigger the scheduler to swap context running on this CPU
+  schedule(regs);
 }
 
 void init_timer(uint32_t frequency) {

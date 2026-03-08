@@ -1,0 +1,37 @@
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
+
+#include "idt.h"
+#include <stdint.h>
+
+typedef enum {
+  PROCESS_RUNNING,
+  PROCESS_READY,
+  PROCESS_BLOCKED,
+  PROCESS_DEAD
+} process_state_t;
+
+// Context structure describing the CPU registers during a context switch
+typedef struct context {
+  uint32_t edi, esi, ebx, ebp, eip;
+} context_t;
+
+typedef struct process {
+  uint32_t pid;
+  process_state_t state;
+  uint32_t esp;          // The stack pointer for the process
+  uint32_t ebp;          // The base pointer
+  uint32_t kernel_stack; // Top of the allocated stack
+
+  struct process *next; // Round-robin links
+} process_t;
+
+void scheduler_init(void);
+
+// Creates a new process that will start execution at the given function
+process_t *create_process(void (*entry_point)());
+
+// Called by the timer interrupt to switch to the next ready process
+void schedule(registers_t *regs);
+
+#endif

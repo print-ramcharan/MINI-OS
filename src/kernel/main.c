@@ -5,12 +5,30 @@
 #include "multiboot.h"
 #include "paging.h"
 #include "pmm.h"
+#include "scheduler.h"
 #include "timer.h"
 #include "vga.h"
 
 // Defined in linker.ld
 extern uint32_t __kernel_start;
 extern uint32_t __kernel_end;
+
+void task_a() {
+  while (1) {
+    print("A");
+    // A busy-wait loop to slow it down for visibility
+    for (volatile int i = 0; i < 10000000; i++)
+      ;
+  }
+}
+
+void task_b() {
+  while (1) {
+    print("B");
+    for (volatile int i = 0; i < 10000000; i++)
+      ;
+  }
+}
 
 void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
   // Stage 1: Core CPU Setup
@@ -65,10 +83,21 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
   print("[OK] MEM: Virtual Memory (Paging) enabled\n");
 
   // Initialize Kernel Heap Allocator
+  // Allocate 4 pages for heap testing and thread stacks initially
   uint32_t heap_phys = pmm_alloc_page();
+  pmm_alloc_page();
+  pmm_alloc_page();
+  pmm_alloc_page();
+
   // Map one 4KB page for testing the heap initially
   map_page(heap_phys, heap_phys, PAGE_PRESENT | PAGE_RW);
-  kheap_init(heap_phys, PAGE_SIZE);
+  map_page(heap_phys + PAGE_SIZE, heap_phys + PAGE_SIZE,
+           PAGE_PRESENT | PAGE_RW);
+  map_page(heap_phys + PAGE_SIZE * 2, heap_phys + PAGE_SIZE * 2,
+           PAGE_PRESENT | PAGE_RW);
+  map_page(heap_phys + PAGE_SIZE * 3, heap_phys + PAGE_SIZE * 3,
+           PAGE_PRESENT | PAGE_RW);
+  kheap_init(heap_phys, PAGE_SIZE * 4);
 
   print("[OK] MEM: Kernel dynamic heap allocator initialized\n");
 
@@ -94,7 +123,13 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
   print("\n");
   print("`kfree` -> freeing first chunk... \n");
   kfree(test_ptr_1);
-  print("> ");
+  print("Starting Process Scheduler demonstration...\n");
+
+  scheduler_init();
+  extern void enable_scheduler();
+  create_process(task_a);
+  create_process(task_b);
+  enable_scheduler();
 
   // To test page fault uncomment this line:
   // uint32_t *ptr = (uint32_t*)0xA0000000;
