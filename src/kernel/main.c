@@ -2,6 +2,7 @@
 #include "idt.h"
 #include "keyboard.h"
 #include "multiboot.h"
+#include "paging.h"
 #include "pmm.h"
 #include "timer.h"
 #include "vga.h"
@@ -58,6 +59,10 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
 
   print("[OK] MEM: Physical Memory Manager (PMM) setup done\n");
 
+  // Enable Virtual Memory mapping
+  init_paging();
+  print("[OK] MEM: Virtual Memory (Paging) enabled\n");
+
   // Start Drivers
   init_timer(50); // 50 Hz
   init_keyboard();
@@ -67,14 +72,18 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
   print("[OK] DRV: Keyboard driver started\n\n");
 
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK));
-  print("Physical memory mapped successfully!\n");
+  print("Memory mapped successfully via CR3!\n");
   print("Trying memory allocation test: \n");
   uint32_t p = pmm_alloc_page();
-  print("Allocated page at: ");
+  print("Allocated physical page at: ");
   print_hex(p);
   print("\n");
   pmm_free_page(p);
   print("> ");
+
+  // To test page fault uncomment this line:
+  // uint32_t *ptr = (uint32_t*)0xA0000000;
+  // uint32_t do_page_fault = *ptr;
 
   while (1) {
   }
