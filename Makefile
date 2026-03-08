@@ -24,7 +24,8 @@ ASFLAGS = -f elf32
 KERNEL_BIN = $(BUILD_DIR)/minios.bin
 OS_ISO = minios.iso
 
-all: $(OS_ISO)
+all: $(KERNEL_BIN)
+kernel: $(KERNEL_BIN)
 
 # Rule to compile C files
 $(BUILD_DIR)/%.o: src/%.c
@@ -40,8 +41,8 @@ $(BUILD_DIR)/%.o: src/%.asm
 $(KERNEL_BIN): $(OBJS) linker.ld
 	$(CC) -T linker.ld -o $@ -ffreestanding -O2 -nostdlib $(OBJS) -lgcc
 
-# Create ISO image
-$(OS_ISO): $(KERNEL_BIN)
+# Create ISO image (requires grub-mkrescue toolchain)
+iso: $(KERNEL_BIN)
 	@mkdir -p $(ISO_GRUB)
 	cp $(KERNEL_BIN) $(ISO_BOOT)/minios.bin
 	echo 'set timeout=0' > $(ISO_GRUB)/grub.cfg
@@ -58,7 +59,7 @@ clean:
 	rm -rf $(BUILD_DIR) $(ISO_DIR) $(OS_ISO)
 
 # Run in emulator
-run: $(OS_ISO)
-	qemu-system-i386 -cdrom $(OS_ISO)
+run: $(KERNEL_BIN)
+	qemu-system-i386 -kernel $(KERNEL_BIN)
 
 .PHONY: all clean run
