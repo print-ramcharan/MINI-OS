@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINI-OS: Architecture & Execution Flow</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.2);
+            --border: #334155;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            height: 100vh;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar h2 {
+            font-size: 1.25rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            background-color: var(--accent-glow);
+            color: var(--accent);
+        }
+
+        /* Main Content */
+        .content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 4rem;
+            max-width: 1200px;
+        }
+
+        .section {
+            margin-bottom: 5rem;
+            padding-top: 2rem; /* Offset for anchor links */
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            color: var(--accent);
+            margin: 1.5rem 0 0.5rem;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        /* Diagram Containers */
+        .diagram-container {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            overflow-x: auto;
+            text-align: center;
+        }
+        
+        .mermaid {
+            display: inline-block;
+            min-width: 600px;
+        }
+
+        .mermaid svg {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Code Blocks */
+        pre {
+            background-color: #111827 !important;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 2rem !important;
+        }
+        
+        code {
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.9rem;
+        }
+        
+        .important-box {
+            background-color: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid #f59e0b;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 0 8px 8px 0;
+        }
+        .important-box strong { color: #f59e0b; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <h2>MINI-OS Guide</h2>
+        <a href="#intro" class="active">Introduction</a>
+        <a href="#boot">1. Boot Sequence</a>
+        <a href="#cpu">2. CPU Protection (GDT/IDT)</a>
+        <a href="#memory">3. Memory Management</a>
+        <a href="#drivers">4. Hardware Drivers</a>
+        <a href="#scheduler">5. Process Scheduler</a>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content">
+
+        <!-- Intro -->
+        <section id="intro" class="section">
+            <h1>MINI-OS Interactive Guide</h1>
+            <p>Welcome to the visual learning portal for your MINI-OS project. This page acts as a "cheat sheet" for your technical interviews, visually mapping out how your code works under the hood from the exact moment the PC turns on, all the way to multitasking user processes.</p>
+            <div class="important-box">
+                <strong>💡 Interview Tip:</strong> If an interviewer asks to explain your project's architecture, use the structure of this page. Start with Boot, move to Memory, then Interrupts, and finally the Scheduler.
+            </div>
+        </section>
+
+        <!-- 1. Boot Sequence -->
+        <section id="boot" class="section">
+            <h2>1. The Boot Sequence</h2>
+            <p>The operating system begins life in 16-bit real mode. The BIOS does hardware checks and hands control to GRUB. Because your <code>boot.asm</code> file contains a special "Multiboot Header", GRUB knows how to load it. GRUB switches the CPU to 32-bit protected mode and hands control to your assembly entry point <code>_start</code>.</p>
+            
+            <div class="diagram-container">
+                <div class="mermaid">
+                    graph TD
+                    A[Power On] --> B(BIOS/UEFI)
+                    B --> C{GRUB Bootloader}
+                    C -->|Finds Multiboot Header| D(Switches CPU to 32-bit)
+                    D --> E[boot.asm : _start]
+                    E -->|Sets up Stack| F[main.c : kernel_main]
+                    
+                    style A fill:#e2e8f0,stroke:#333,stroke-width:2px,color:#000
+                    style B fill:#e2e8f0,stroke:#333,stroke-width:2px,color:#000
+                    style C fill:#fde047,stroke:#333,stroke-width:2px,color:#000
+                    style D fill:#fde047,stroke:#333,stroke-width:2px,color:#000
+                    style E fill:#818cf8,stroke:#333,stroke-width:2px,color:#000
+                    style F fill:#38bdf8,stroke:#333,stroke-width:2px,color:#000
+                </div>
+            </div>
+
+            <h3>Code Highlight: The Stack Setup (boot.asm)</h3>
+            <p>C code cannot execute without a stack (it needs memory to store variables and return addresses). Notice how the assembly code creates a 16KB stack and sets the <code>esp</code> register before calling your C function.</p>
+            <pre><code class="language-nasm">; Create 16KB stack in the BSS section
+section .bss
+align 16
+stack_bottom:
+resb 16384 ; 16 KiB
+stack_top:
+
+section .text
+global _start
+_start:
+    ; 1. Point the stack pointer to the top of our 16KB space
+    mov esp, stack_top
+
+    ; 2. Push the Multiboot args (magic number and memory map pointer)
+    push eax
+    push ebx
+
+    ; 3. Jump to the C code!
+    extern kernel_main
+    call kernel_main</code></pre>
+        </section>
+
+        <!-- 2. CPU Protection -->
+        <section id="cpu" class="section">
+            <h2>2. CPU Protection (GDT & IDT)</h2>
+            <p>Once inside C code, the CPU is extremely fragile. A single math error will crash the computer. You immediately set up two vital data structures: the <strong>GDT</strong> (Global Descriptor Table) to define memory boundaries, and the <strong>IDT</strong> (Interrupt Descriptor Table) to catch errors and hardware signals.</p>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+                    graph TD
+                    A[Hardware Error<br>or Divide by Zero] -->|CPU Pauses| B(Checks IDT Table)
+                    B --> C{Which Handler?}
+                    C -->|Entry 0| D[Divide Error ISR]
+                    C -->|Entry 14| E[Page Fault ISR]
+                    C -->|Entry 32| F[Timer IRQ0]
+                    C -->|Entry 33| G[Keyboard IRQ1]
+                </div>
+            </div>
+
+            <h3>Code Highlight: Loading the GDT (gdt.c)</h3>
+            <p>Here you build the table that defines your kernel's physical memory boundaries and permissions.</p>
+            <pre><code class="language-c">void gdt_install() {
+  // gp is the pointer we pass to the CPU
+  gp.limit = (sizeof(struct gdt_entry) * 3) - 1;
+  gp.base = (uint32_t)&gdt;
+
+  // Entry 0: Null descriptor (required by x86 CPU)
+  gdt_set_gate(0, 0, 0, 0, 0);
+
+  // Entry 1: Code Segment (starts at 0, limit 4GB, readable, executable)
+  gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
+
+  // Entry 2: Data Segment (starts at 0, limit 4GB, readable, writable)
+  gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
+
+  // Calls the assembly wrapper 'lgdt' to load this table into the CPU
+  gdt_flush((uint32_t)&gp);
+}</code></pre>
+        </section>
+
+        <!-- 3. Memory Management -->
+        <section id="memory" class="section">
+            <h2>3. Memory Management</h2>
+            <p>This is the hardest part of any OS. Your OS separates this into three distinct layers. First, the <strong>PMM</strong> (Physical Memory Manager) tracks physical RAM chips. Second, the <strong>VMM</strong> (Paging) maps virtual addresses to physical ones. Finally, the <strong>Kernel Heap</strong> provides <code>kmalloc()</code> for dynamic variables.</p>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+                    flowchart TD
+                    subgraph User_Code [User Code]
+                        A(Requests memory: kmalloc)
+                    end
+                    subgraph OS_Kernel [OS Kernel]
+                        B{KHeap - kheap.c}
+                        C(Paging / VMM)
+                        D(PMM Bitmap)
+                    end
+                    subgraph HW [Hardware]
+                        E[(Physical RAM Chips)]
+                    end
+                    
+                    A -->|Asks for 40 bytes| B
+                    B -->|If no space, gets Page| C
+                    C -->|Asks PMM for RAM| D
+                    D -->|Finds a 0 in Bitmap| E
+                    E -.->|Returns address 0x10000| D
+                    D -.->|Tells Paging| C
+                    C -.->|Maps Virtual to Physical| B
+                    B -.->|Hands User 40 bytes| A
+                </div>
+            </div>
+
+            <h3>Code Highlight: Finding Free RAM (pmm.c)</h3>
+            <p>The PMM uses a massive array of bits (a bitmap). 0 means the memory block is free, 1 means it is used.</p>
+            <pre><code class="language-c">uint32_t pmm_alloc_page(void) {
+  // Loop through all possible 4KB blocks in RAM
+  for (uint32_t i = 0; i < pmm_max_blocks; i++) {
+    if (!bitmap_test(i)) {  // If bit is 0 (Free)
+      bitmap_set(i);        // Mark as 1 (Used)
+      pmm_used_blocks++;
+      return i * PAGE_SIZE; // Return the exact physical memory address
+    }
+  }
+  return 0; // System is completely out of memory!
+}</code></pre>
+        </section>
+
+        <!-- 4. Hardware Drivers -->
+        <section id="drivers" class="section">
+            <h2>4. Hardware Drivers (Timer & Keyboard)</h2>
+            <p>Your OS communicates with the outside world using specific hardware ports via <code>inb</code> and <code>outb</code> instructions. The most crucial driver is the Timer (PIT), which is the beating heart of your OS scheduler.</p>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+                    sequenceDiagram
+                    participant P as User Program
+                    participant T as PIT Timer
+                    participant C as CPU
+                    participant S as Scheduler
+                    
+                    T->>C: Sends IRQ0 (20ms)
+                    C-->>P: Pauses program
+                    C->>S: Jumps to Handler
+                    Note right of S: Scheduler<br>swaps tasks
+                    S-->>P: Resumes DIFFERENT program
+                </div>
+            </div>
+
+            <h3>Code Highlight: Configuring the Motherboard Timer (timer.c)</h3>
+            <pre><code class="language-c">void init_timer(uint32_t frequency) {
+  // Tell IDT that IRQ0 (Interrupt 32) should trigger 'timer_callback'
+  register_interrupt_handler(32, timer_callback);
+
+  // The base clock of the chip is 1193180 Hz. We divide it to get 50Hz.
+  uint32_t divisor = 1193180 / frequency;
+
+  // 0x43 is the Command Port. Tell chip we are updating frequency.
+  outb_timer(0x43, 0x36);
+
+  // Send the divisor over port 0x40 (Data Port), one byte at a time.
+  uint8_t l = (uint8_t)(divisor & 0xFF);
+  uint8_t h = (uint8_t)((divisor >> 8) & 0xFF);
+  outb_timer(0x40, l);
+  outb_timer(0x40, h);
+}</code></pre>
+        </section>
+
+        <!-- 5. Process Scheduler -->
+        <section id="scheduler" class="section">
+            <h2>5. Process Scheduler (Multitasking)</h2>
+            <p>Your OS uses a preemptive round-robin scheduler. When the Timer fires its 50Hz tick, the OS stops whatever it is currently doing, saves all the CPU registers, grabs the registers for the next task in the circular linked list, and restores them.</p>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+                    graph LR
+                    A((Task A<br>RUNNING)) -->|Timer Tick!| B((Task B<br>READY))
+                    B -->|Timer Tick!| C((Task C<br>READY))
+                    C -->|Timer Tick!| A
+                    
+                    style A fill:#4ade80,stroke:#333,stroke-width:4px,color:#000
+                    style B fill:#e2e8f0,stroke:#333,stroke-width:2px,color:#000
+                    style C fill:#e2e8f0,stroke:#333,stroke-width:2px,color:#000
+                </div>
+            </div>
+
+            <h3>Code Highlight: The Software Switch (scheduler.c)</h3>
+            <p>Notice that we don't return anything. We call a raw assembly function <code>context_switch</code> which forcefully manipulates the CPU Stack Pointer (<code>ESP</code>) to trick the CPU into returning to a different function than the one it started in.</p>
+            <pre><code class="language-c">void schedule(registers_t *regs) {
+  if (!scheduler_enabled || !current_process) return;
+
+  process_t *prev = current_process;
+  process_t *next = current_process->next;
+
+  // Skip processes that are blocked or dead
+  while (next->state != PROCESS_READY && next->state != PROCESS_RUNNING) {
+    next = next->next;
+    if (next == prev) return; 
+  }
+
+  // Update states
+  prev->state = PROCESS_READY;
+  next->state = PROCESS_RUNNING;
+  current_process = next;
+
+  // The ultimate trick: swap the ESP (Stack Pointer) using Assembly
+  context_switch(&prev->esp, next->esp);
+}</code></pre>
+        </section>
+
+    </main>
+
+    <!-- Scripts for Diagrams and Syntax Highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-nasm.min.js"></script>
+    
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#e2e8f0',
+                primaryTextColor: '#000',
+                primaryBorderColor: '#333',
+                lineColor: '#333',
+                secondaryColor: '#fde047',
+                tertiaryColor: '#38bdf8'
+            }
+        });
+
+        // Simple active state toggling for sidebar
+        const links = document.querySelectorAll('.sidebar a');
+        links.forEach(link => {
+            link.addEventListener('click', function() {
+                links.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
