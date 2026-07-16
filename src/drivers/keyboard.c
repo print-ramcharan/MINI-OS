@@ -17,7 +17,30 @@ unsigned char kbdus[128] = {
     0,   0,    0,    0,   0,    0,   0,   0,   0,   '-', 0,   0,   0,
     '+', 0,    0,    0,   0,    0,   0,   0,   0,   0,   0,   0};
 
+#define KEYBOARD_BUFFER_SIZE 128
+static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
+static uint32_t keyboard_buffer_head = 0;
+static uint32_t keyboard_buffer_tail = 0;
+
+static void keyboard_buffer_push(char c) {
+  uint32_t next = (keyboard_buffer_head + 1) % KEYBOARD_BUFFER_SIZE;
+  if (next != keyboard_buffer_tail) {
+    keyboard_buffer[keyboard_buffer_head] = c;
+    keyboard_buffer_head = next;
+  }
+}
+
+char keyboard_read_char(void) {
+  if (keyboard_buffer_head == keyboard_buffer_tail) {
+    return 0; // Empty
+  }
+  char c = keyboard_buffer[keyboard_buffer_tail];
+  keyboard_buffer_tail = (keyboard_buffer_tail + 1) % KEYBOARD_BUFFER_SIZE;
+  return c;
+}
+
 static void keyboard_callback(registers_t *regs) {
+  (void)regs;
   uint8_t scancode = inb(0x60);
   if (scancode & 0x80) {
     // key release
@@ -26,6 +49,7 @@ static void keyboard_callback(registers_t *regs) {
     char c = kbdus[scancode];
     if (c != 0) {
       terminal_putchar(c);
+      keyboard_buffer_push(c);
     }
   }
 }
