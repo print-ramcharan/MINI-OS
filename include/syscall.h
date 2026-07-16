@@ -7,6 +7,7 @@
 #define SYS_WRITE 1
 #define SYS_SLEEP 2
 #define SYS_EXIT 3
+#define SYS_YIELD 4
 
 void syscall_init(void);
 

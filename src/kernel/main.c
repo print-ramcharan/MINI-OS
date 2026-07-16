@@ -14,6 +14,10 @@
 extern uint32_t __kernel_start;
 extern uint32_t __kernel_end;
 
+void yield() {
+  asm volatile("mov $4, %%eax; int $0x80" ::: "eax");
+}
+
 void task_a() {
   char *hello = " [Syscall from Task A!] ";
 
@@ -25,17 +29,14 @@ void task_a() {
 
   while (1) {
     print("A");
-    // A busy-wait loop to slow it down for visibility
-    for (volatile int i = 0; i < 10000000; i++)
-      ;
+    yield();
   }
 }
 
 void task_b() {
   while (1) {
     print("B");
-    for (volatile int i = 0; i < 10000000; i++)
-      ;
+    yield();
   }
 }
 

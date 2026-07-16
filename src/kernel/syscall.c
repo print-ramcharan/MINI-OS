@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "scheduler.h"
 #include "timer.h"
 #include "vga.h"
 
@@ -37,6 +38,9 @@ void syscall_handler(registers_t *regs) {
     break;
   case SYS_EXIT:
     sys_exit();
+    break;
+  case SYS_YIELD:
+    schedule(regs);
     break;
   default:
     print("[SYSCALL] Unknown syscall number: ");
