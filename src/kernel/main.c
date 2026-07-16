@@ -18,6 +18,13 @@ void yield() {
   asm volatile("mov $4, %%eax; int $0x80" ::: "eax");
 }
 
+void sleep(uint32_t ticks) {
+  asm volatile("mov $2, %%eax; mov %0, %%ebx; int $0x80"
+               :
+               : "r"(ticks)
+               : "eax", "ebx");
+}
+
 void task_a() {
   char *hello = " [Syscall from Task A!] ";
 
@@ -29,14 +36,14 @@ void task_a() {
 
   while (1) {
     print("A");
-    yield();
+    sleep(50); // Sleep for 1 second (50 ticks)
   }
 }
 
 void task_b() {
   while (1) {
     print("B");
-    yield();
+    sleep(10); // Sleep for 0.2 seconds (10 ticks)
   }
 }
 

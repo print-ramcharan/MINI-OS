@@ -10,6 +10,8 @@ uint32_t tick = 0;
 
 static void timer_callback(registers_t *regs) {
   tick++;
+  // Update process sleep states
+  scheduler_tick();
   // Trigger the scheduler to swap context running on this CPU
   schedule(regs);
 }
