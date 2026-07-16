@@ -22,11 +22,15 @@ typedef struct process {
   uint32_t esp;          // The stack pointer for the process
   uint32_t ebp;          // The base pointer
   uint32_t kernel_stack; // Top of the allocated stack
+  uint32_t sleep_ticks;  // Sleep duration remaining in ticks
 
   struct process *next; // Round-robin links
 } process_t;
 
 void scheduler_init(void);
+void scheduler_tick(void);
+
+extern process_t *current_process;
 
 // Creates a new process that will start execution at the given function
 process_t *create_process(void (*entry_point)());

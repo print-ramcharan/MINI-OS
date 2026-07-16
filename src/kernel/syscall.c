@@ -7,12 +7,11 @@
 
 static void sys_write(char *str) { print(str); }
 
-static void sys_sleep(uint32_t ticks) {
-  // Basic busy sleep using PIT ticks
-  extern uint32_t tick;
-  uint32_t end_tick = tick + ticks;
-  while (tick < end_tick) {
-    // Wait
+static void sys_sleep(uint32_t ticks, registers_t *regs) {
+  if (ticks > 0 && current_process) {
+    current_process->sleep_ticks = ticks;
+    current_process->state = PROCESS_BLOCKED;
+    schedule(regs);
   }
 }
 
@@ -34,7 +33,7 @@ void syscall_handler(registers_t *regs) {
     sys_write((char *)regs->ebx);
     break;
   case SYS_SLEEP:
-    sys_sleep(regs->ebx);
+    sys_sleep(regs->ebx, regs);
     break;
   case SYS_EXIT:
     sys_exit();

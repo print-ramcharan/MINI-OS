@@ -24,6 +24,7 @@ process_t *create_process(void (*entry_point)()) {
   process_t *new_proc = (process_t *)kmalloc(sizeof(process_t));
   new_proc->pid = next_pid++;
   new_proc->state = PROCESS_READY;
+  new_proc->sleep_ticks = 0;
   new_proc->next = NULL;
 
   // Allocate stack physical page (4KB)
@@ -96,6 +97,22 @@ void schedule(registers_t *regs) {
 
   // Perform assembly context switch
   context_switch(&prev->esp, next->esp);
+}
+
+void scheduler_tick(void) {
+  if (!scheduler_enabled || !ready_queue) {
+    return;
+  }
+  process_t *temp = ready_queue;
+  do {
+    if (temp->state == PROCESS_BLOCKED && temp->sleep_ticks > 0) {
+      temp->sleep_ticks--;
+      if (temp->sleep_ticks == 0) {
+        temp->state = PROCESS_READY;
+      }
+    }
+    temp = temp->next;
+  } while (temp != ready_queue);
 }
 
 void enable_scheduler() { scheduler_enabled = 1; }
