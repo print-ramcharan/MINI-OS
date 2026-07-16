@@ -25,6 +25,10 @@ void sleep(uint32_t ticks) {
                : "eax", "ebx");
 }
 
+void task_exit() {
+  asm volatile("mov $3, %%eax; int $0x80" ::: "eax");
+}
+
 void task_a() {
   char *hello = " [Syscall from Task A!] ";
 
@@ -34,17 +38,19 @@ void task_a() {
                : "r"(hello)
                : "eax", "ebx");
 
-  while (1) {
+  for (int i = 0; i < 5; i++) {
     print("A");
     sleep(50); // Sleep for 1 second (50 ticks)
   }
+  task_exit();
 }
 
 void task_b() {
-  while (1) {
+  for (int i = 0; i < 10; i++) {
     print("B");
     sleep(10); // Sleep for 0.2 seconds (10 ticks)
   }
+  task_exit();
 }
 
 void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
