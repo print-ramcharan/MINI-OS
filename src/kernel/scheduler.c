@@ -83,15 +83,22 @@ void schedule(registers_t *regs) {
   // Skip dead/blocked processes
   while (next->state != PROCESS_READY && next->state != PROCESS_RUNNING) {
     next = next->next;
-    if (next == prev)
-      return; // All dead/blocked
+    if (next == prev) {
+      if (prev->state == PROCESS_DEAD) {
+        print("\n[Scheduler] All processes finished. Halting CPU.\n");
+        asm volatile("cli; hlt");
+      }
+      return; // All dead/blocked, but current is not dead (could be sleeping/blocked)
+    }
   }
 
   if (prev == next) {
     return; // Only 1 process running
   }
 
-  prev->state = PROCESS_READY;
+  if (prev->state == PROCESS_RUNNING) {
+    prev->state = PROCESS_READY;
+  }
   next->state = PROCESS_RUNNING;
   current_process = next;
 

@@ -15,11 +15,17 @@ static void sys_sleep(uint32_t ticks, registers_t *regs) {
   }
 }
 
-static void sys_exit() {
-  print("\n[SYSCALL] Process exited.\n");
-  // For now, just halt the CPU as we don't have user processes to cleanly tear
-  // down
-  asm volatile("cli; hlt");
+static void sys_exit(registers_t *regs) {
+  if (current_process) {
+    print("\n[SYSCALL] Process ");
+    print_dec(current_process->pid);
+    print(" exited cleanly.\n");
+    current_process->state = PROCESS_DEAD;
+    schedule(regs);
+  }
+  for (;;) {
+    asm volatile("cli; hlt");
+  }
 }
 
 void syscall_handler(registers_t *regs) {
@@ -36,7 +42,7 @@ void syscall_handler(registers_t *regs) {
     sys_sleep(regs->ebx, regs);
     break;
   case SYS_EXIT:
-    sys_exit();
+    sys_exit(regs);
     break;
   case SYS_YIELD:
     schedule(regs);
