@@ -29,6 +29,15 @@ void task_exit() {
   asm volatile("mov $3, %%eax; int $0x80" ::: "eax");
 }
 
+char read_char() {
+  uint32_t val;
+  asm volatile("mov $5, %%eax; int $0x80; mov %%eax, %0"
+               : "=r"(val)
+               :
+               : "eax");
+  return (char)val;
+}
+
 void task_a() {
   char *hello = " [Syscall from Task A!] ";
 
@@ -46,9 +55,16 @@ void task_a() {
 }
 
 void task_b() {
-  for (int i = 0; i < 10; i++) {
-    print("B");
-    sleep(10); // Sleep for 0.2 seconds (10 ticks)
+  print(" [Task B: Interactive mode! Type keys to echo them.] \n");
+  for (int i = 0; i < 200; i++) {
+    char c = read_char();
+    if (c != 0) {
+      print(" [Typed: ");
+      char str[2] = {c, 0};
+      print(str);
+      print("] ");
+    }
+    sleep(5); // Sleep 100ms
   }
   task_exit();
 }

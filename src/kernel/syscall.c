@@ -2,6 +2,7 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "vga.h"
+#include "keyboard.h"
 
 // System call implementations
 
@@ -28,6 +29,10 @@ static void sys_exit(registers_t *regs) {
   }
 }
 
+static char sys_read_char(void) {
+  return keyboard_read_char();
+}
+
 void syscall_handler(registers_t *regs) {
   // The syscall number is passed in EAX
   // Arguments are passed in EBX, ECX, EDX, ESI, EDI
@@ -46,6 +51,9 @@ void syscall_handler(registers_t *regs) {
     break;
   case SYS_YIELD:
     schedule(regs);
+    break;
+  case SYS_READ_CHAR:
+    regs->eax = (uint32_t)sys_read_char();
     break;
   default:
     print("[SYSCALL] Unknown syscall number: ");
