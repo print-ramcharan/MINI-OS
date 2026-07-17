@@ -9,6 +9,7 @@
 #include "syscall.h"
 #include "timer.h"
 #include "vga.h"
+#include "shell.h"
 
 // Defined in linker.ld
 extern uint32_t __kernel_start;
@@ -167,8 +168,7 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
 
   scheduler_init();
   extern void enable_scheduler();
-  create_process(task_a);
-  create_process(task_b);
+  create_process(shell_task);
   enable_scheduler();
 
   // To test page fault uncomment this line:
