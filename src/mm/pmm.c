@@ -68,3 +68,11 @@ void pmm_free_page(uint32_t addr) {
   bitmap_clear(block);
   pmm_used_blocks--;
 }
+
+uint32_t pmm_get_max_blocks(void) {
+  return pmm_max_blocks;
+}
+
+uint32_t pmm_get_used_blocks(void) {
+  return pmm_used_blocks;
+}

@@ -2,6 +2,8 @@
 #include "vga.h"
 #include "timer.h"
 #include "syscall.h"
+#include "pmm.h"
+#include "kheap.h"
 #include <stdint.h>
 
 
@@ -44,6 +46,7 @@ void execute_command(const char *cmd) {
     print("  help   - Show this help message\n");
     print("  clear  - Clear the screen\n");
     print("  ticks  - Print current system ticks\n");
+    print("  free   - Display physical and heap memory statistics\n");
     print("  about  - Show operating system details\n");
     print("  exit   - Exit the shell process\n");
   } else if (strcmp(cmd, "clear") == 0) {
@@ -52,6 +55,21 @@ void execute_command(const char *cmd) {
     print("System uptime: ");
     print_dec(get_tick());
     print(" ticks\n");
+  } else if (strcmp(cmd, "free") == 0) {
+    uint32_t max_blocks = pmm_get_max_blocks();
+    uint32_t used_blocks = pmm_get_used_blocks();
+    uint32_t free_blocks = max_blocks - used_blocks;
+    print("Physical Memory (PMM):\n");
+    print("  Total pages: "); print_dec(max_blocks); print(" ("); print_dec(max_blocks * 4); print(" KB)\n");
+    print("  Used pages:  "); print_dec(used_blocks); print(" ("); print_dec(used_blocks * 4); print(" KB)\n");
+    print("  Free pages:  "); print_dec(free_blocks); print(" ("); print_dec(free_blocks * 4); print(" KB)\n\n");
+
+    uint32_t heap_tot = 0, heap_usd = 0, heap_fre = 0;
+    kheap_get_stats(&heap_tot, &heap_usd, &heap_fre);
+    print("Kernel Dynamic Heap:\n");
+    print("  Total size: "); print_dec(heap_tot); print(" bytes\n");
+    print("  Used size:  "); print_dec(heap_usd); print(" bytes\n");
+    print("  Free size:  "); print_dec(heap_fre); print(" bytes\n");
   } else if (strcmp(cmd, "about") == 0) {
     print("MINI OS KERNEL v1.1 - Command Shell\n");
   } else if (strcmp(cmd, "exit") == 0) {
