@@ -81,6 +81,7 @@ void execute_command(const char *cmd) {
     print("  clear                - Clear the screen\n");
     print("  ticks                - Print current system ticks\n");
     print("  free                 - Display physical and heap memory statistics\n");
+    print("  cpuinfo              - Show CPU register and system descriptor statistics\n");
     print("  ls                   - List files in RAM File System\n");
     print("  touch <file>         - Create an empty file\n");
     print("  write <file> <text>  - Write text content to a file\n");
@@ -108,6 +109,36 @@ void execute_command(const char *cmd) {
     print("  Total size: "); print_dec(heap_tot); print(" bytes\n");
     print("  Used size:  "); print_dec(heap_usd); print(" bytes\n");
     print("  Free size:  "); print_dec(heap_fre); print(" bytes\n");
+  } else if (strcmp(arg0, "cpuinfo") == 0) {
+    uint32_t cr0, cr3, cr4;
+    asm volatile("mov %%cr0, %0" : "=r"(cr0));
+    asm volatile("mov %%cr3, %0" : "=r"(cr3));
+    asm volatile("mov %%cr4, %0" : "=r"(cr4));
+
+    uint16_t gdt_limit;
+    uint32_t gdt_base;
+    uint8_t gdt_ptr[6];
+    asm volatile("sgdt %0" : "=m"(gdt_ptr));
+    gdt_limit = *(uint16_t*)gdt_ptr;
+    gdt_base = *(uint32_t*)(gdt_ptr + 2);
+
+    uint16_t idt_limit;
+    uint32_t idt_base;
+    uint8_t idt_ptr[6];
+    asm volatile("sidt %0" : "=m"(idt_ptr));
+    idt_limit = *(uint16_t*)idt_ptr;
+    idt_base = *(uint32_t*)(idt_ptr + 2);
+
+    print("CPU Registers & Control Status:\n");
+    print("  CR0 (Control Register 0):  "); print_hex(cr0); print("\n");
+    print("  CR3 (Page Directory Base): "); print_hex(cr3); print("\n");
+    print("  CR4 (Extended Features):   "); print_hex(cr4); print("\n\n");
+    print("Global Descriptor Table (GDT):\n");
+    print("  GDT Base:  "); print_hex(gdt_base); print("\n");
+    print("  GDT Limit: "); print_hex(gdt_limit); print("\n\n");
+    print("Interrupt Descriptor Table (IDT):\n");
+    print("  IDT Base:  "); print_hex(idt_base); print("\n");
+    print("  IDT Limit: "); print_hex(idt_limit); print("\n");
   } else if (strcmp(arg0, "ls") == 0) {
     print("Files in RamFS:\n");
     ramfs_list();
