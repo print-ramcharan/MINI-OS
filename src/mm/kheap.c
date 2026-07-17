@@ -75,3 +75,22 @@ void kfree(void *ptr) {
     print("[PANIC] Invalid kfree pointer!\n");
   }
 }
+
+void kheap_get_stats(uint32_t *total_bytes, uint32_t *used_bytes, uint32_t *free_bytes) {
+  uint32_t tot = 0;
+  uint32_t usd = 0;
+  uint32_t fre = 0;
+  heap_block_t *curr = heap_start;
+  while (curr != NULL) {
+    tot += curr->size + sizeof(heap_block_t);
+    if (curr->magic == ALLOC_MAGIC) {
+      usd += curr->size;
+    } else {
+      fre += curr->size;
+    }
+    curr = curr->next;
+  }
+  if (total_bytes) *total_bytes = tot;
+  if (used_bytes) *used_bytes = usd;
+  if (free_bytes) *free_bytes = fre;
+}

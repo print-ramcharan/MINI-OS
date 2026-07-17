@@ -21,4 +21,7 @@ uint32_t pmm_alloc_page(void);
 // Frees a single 4KB page
 void pmm_free_page(uint32_t addr);
 
+uint32_t pmm_get_max_blocks(void);
+uint32_t pmm_get_used_blocks(void);
+
 #endif
