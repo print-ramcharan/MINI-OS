@@ -10,6 +10,7 @@
 #include "timer.h"
 #include "vga.h"
 #include "shell.h"
+#include "ramfs.h"
 
 // Defined in linker.ld
 extern uint32_t __kernel_start;
@@ -148,7 +149,10 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
 
   print("[OK] DRV: VGA Text Mode initialized\n");
   print("[OK] DRV: PIT Timer started (50Hz)\n");
-  print("[OK] DRV: Keyboard driver started\n\n");
+  print("[OK] DRV: Keyboard driver started\n");
+
+  ramfs_init();
+  print("[OK] VFS: RAM File System initialized\n\n");
 
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK));
   print("Memory subsystems passed CR3 / Malloc tests!\n");

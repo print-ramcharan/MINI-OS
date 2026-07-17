@@ -4,9 +4,8 @@
 #include "syscall.h"
 #include "pmm.h"
 #include "kheap.h"
+#include "ramfs.h"
 #include <stdint.h>
-
-
 
 static void shell_sleep(uint32_t ticks) {
   asm volatile("mov $2, %%eax; mov %0, %%ebx; int $0x80"
@@ -36,26 +35,65 @@ static int strcmp(const char *s1, const char *s2) {
   return *(const unsigned char *)s1 - *(const unsigned char *)s2;
 }
 
+static void parse_args(const char *cmd, char *arg0, char *arg1, char *arg2) {
+  int i = 0;
+  int j = 0;
+  // Read first token (arg0)
+  while (cmd[i] && cmd[i] != ' ' && j < 31) {
+    arg0[j++] = cmd[i++];
+  }
+  arg0[j] = '\0';
+  
+  // Skip spaces
+  while (cmd[i] == ' ') i++;
+  
+  // Read second token (arg1)
+  j = 0;
+  while (cmd[i] && cmd[i] != ' ' && j < 31) {
+    arg1[j++] = cmd[i++];
+  }
+  arg1[j] = '\0';
+
+  // Skip spaces
+  while (cmd[i] == ' ') i++;
+  
+  // Read third token/rest of string (arg2)
+  j = 0;
+  while (cmd[i] && j < 255) {
+    arg2[j++] = cmd[i++];
+  }
+  arg2[j] = '\0';
+}
+
 #define CMD_BUFFER_SIZE 64
 static char cmd_buf[CMD_BUFFER_SIZE];
 static int cmd_len = 0;
 
 void execute_command(const char *cmd) {
-  if (strcmp(cmd, "help") == 0) {
+  char arg0[32];
+  char arg1[32];
+  char arg2[256];
+  parse_args(cmd, arg0, arg1, arg2);
+
+  if (strcmp(arg0, "help") == 0) {
     print("Available commands:\n");
-    print("  help   - Show this help message\n");
-    print("  clear  - Clear the screen\n");
-    print("  ticks  - Print current system ticks\n");
-    print("  free   - Display physical and heap memory statistics\n");
-    print("  about  - Show operating system details\n");
-    print("  exit   - Exit the shell process\n");
-  } else if (strcmp(cmd, "clear") == 0) {
+    print("  help                 - Show this help message\n");
+    print("  clear                - Clear the screen\n");
+    print("  ticks                - Print current system ticks\n");
+    print("  free                 - Display physical and heap memory statistics\n");
+    print("  ls                   - List files in RAM File System\n");
+    print("  touch <file>         - Create an empty file\n");
+    print("  write <file> <text>  - Write text content to a file\n");
+    print("  cat <file>           - Display the content of a file\n");
+    print("  about                - Show operating system details\n");
+    print("  exit                 - Exit the shell process\n");
+  } else if (strcmp(arg0, "clear") == 0) {
     terminal_initialize();
-  } else if (strcmp(cmd, "ticks") == 0) {
+  } else if (strcmp(arg0, "ticks") == 0) {
     print("System uptime: ");
     print_dec(get_tick());
     print(" ticks\n");
-  } else if (strcmp(cmd, "free") == 0) {
+  } else if (strcmp(arg0, "free") == 0) {
     uint32_t max_blocks = pmm_get_max_blocks();
     uint32_t used_blocks = pmm_get_used_blocks();
     uint32_t free_blocks = max_blocks - used_blocks;
@@ -70,16 +108,47 @@ void execute_command(const char *cmd) {
     print("  Total size: "); print_dec(heap_tot); print(" bytes\n");
     print("  Used size:  "); print_dec(heap_usd); print(" bytes\n");
     print("  Free size:  "); print_dec(heap_fre); print(" bytes\n");
-  } else if (strcmp(cmd, "about") == 0) {
+  } else if (strcmp(arg0, "ls") == 0) {
+    print("Files in RamFS:\n");
+    ramfs_list();
+  } else if (strcmp(arg0, "touch") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: touch <filename>\n");
+    } else {
+      int res = ramfs_create(arg1);
+      if (res == -1) print("Error: File already exists\n");
+      else if (res == -2) print("Error: File system full\n");
+      else print("File created.\n");
+    }
+  } else if (strcmp(arg0, "write") == 0) {
+    if (arg1[0] == '\0' || arg2[0] == '\0') {
+      print("Usage: write <filename> <content>\n");
+    } else {
+      int res = ramfs_write(arg1, arg2);
+      if (res == -1) print("Error: File not found\n");
+      else print("File written.\n");
+    }
+  } else if (strcmp(arg0, "cat") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: cat <filename>\n");
+    } else {
+      const char *content = ramfs_read(arg1);
+      if (!content) print("Error: File not found\n");
+      else {
+        print(content);
+        print("\n");
+      }
+    }
+  } else if (strcmp(arg0, "about") == 0) {
     print("MINI OS KERNEL v1.1 - Command Shell\n");
-  } else if (strcmp(cmd, "exit") == 0) {
+  } else if (strcmp(arg0, "exit") == 0) {
     print("Exiting shell. Goodbye!\n");
     shell_exit();
-  } else if (strcmp(cmd, "") == 0) {
+  } else if (strcmp(arg0, "") == 0) {
     // Empty command, do nothing
   } else {
     print("Unknown command: ");
-    print(cmd);
+    print(arg0);
     print("\nType 'help' for a list of commands.\n");
   }
 }
