@@ -111,15 +111,6 @@ static void snake_exit(void) {
 }
 
 static void move_snake(void) {
-  // Clear tail from screen
-  coord_t tail = game.body[game.length - 1];
-  terminal_putentryat(' ', vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK), tail.x, tail.y);
-
-  // Shift body segments
-  for (int i = game.length - 1; i > 0; i--) {
-    game.body[i] = game.body[i - 1];
-  }
-
   // Calculate new head
   coord_t new_head = game.body[0];
   switch (game.dir) {
@@ -128,9 +119,47 @@ static void move_snake(void) {
     case DIR_LEFT:  new_head.x--; break;
     case DIR_RIGHT: new_head.x++; break;
   }
-  
-  // Set new head
-  game.body[0] = new_head;
+
+  // 1. Check Wall Collisions
+  if (new_head.x < BOARD_MIN_X || new_head.x > BOARD_MAX_X ||
+      new_head.y < BOARD_MIN_Y || new_head.y > BOARD_MAX_Y) {
+    game.game_over = 1;
+    return;
+  }
+
+  // 2. Check Self Collisions
+  for (int i = 0; i < game.length; i++) {
+    if (game.body[i].x == new_head.x && game.body[i].y == new_head.y) {
+      game.game_over = 1;
+      return;
+    }
+  }
+
+  // 3. Check Food Collision
+  int eats_food = (new_head.x == game.food.x && new_head.y == game.food.y);
+
+  if (eats_food) {
+    game.score += 10;
+    if (game.length < MAX_SNAKE_LEN) {
+      game.length++;
+    }
+    // Shift body segments
+    for (int i = game.length - 1; i > 0; i--) {
+      game.body[i] = game.body[i - 1];
+    }
+    game.body[0] = new_head;
+    spawn_food();
+  } else {
+    // Clear tail from screen
+    coord_t tail = game.body[game.length - 1];
+    terminal_putentryat(' ', vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK), tail.x, tail.y);
+
+    // Shift body
+    for (int i = game.length - 1; i > 0; i--) {
+      game.body[i] = game.body[i - 1];
+    }
+    game.body[0] = new_head;
+  }
 
   // Draw body segments
   for (int i = 1; i < game.length; i++) {
