@@ -183,6 +183,35 @@ void snake_game_task(void) {
   init_game();
 
   while (1) {
+    if (game.game_over) {
+      // Draw Game Over Box
+      terminal_setcolor(vga_entry_color(VGA_COLOR_RED, VGA_COLOR_BLACK));
+      extern size_t terminal_row;
+      extern size_t terminal_column;
+      terminal_row = 11;
+      terminal_column = 25;
+      print("*****************************");
+      terminal_row = 12;
+      terminal_column = 25;
+      print("*         GAME OVER!        *");
+      terminal_row = 13;
+      terminal_column = 25;
+      print("*  Press [Enter] to exit    *");
+      terminal_row = 14;
+      terminal_column = 25;
+      print("*****************************");
+
+      // Wait for exit key
+      while (1) {
+        char key = shell_read_char();
+        if (key == '\n' || key == 27) {
+          terminal_initialize();
+          snake_exit();
+        }
+        shell_sleep(5);
+      }
+    }
+
     char c = shell_read_char();
     if (c != 0) {
       if (c == 27) { // ESC to Quit
