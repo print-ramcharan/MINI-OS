@@ -110,7 +110,8 @@ int ramfs_copy(const char *src, const char *dest) {
 
   // Create destination
   int res = ramfs_create(dest);
-  if (res < 0) return res; // Error creating destination
+  if (res == -1) return -3; // Destination exists
+  if (res == -2) return -2; // Full
 
   // Write contents
   return ramfs_write(dest, files[src_idx].content);
