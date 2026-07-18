@@ -84,6 +84,36 @@ static void snake_exit(void) {
   asm volatile("mov $3, %%eax; int $0x80" ::: "eax");
 }
 
+static void move_snake(void) {
+  // Clear tail from screen
+  coord_t tail = game.body[game.length - 1];
+  terminal_putentryat(' ', vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK), tail.x, tail.y);
+
+  // Shift body segments
+  for (int i = game.length - 1; i > 0; i--) {
+    game.body[i] = game.body[i - 1];
+  }
+
+  // Calculate new head
+  coord_t new_head = game.body[0];
+  switch (game.dir) {
+    case DIR_UP:    new_head.y--; break;
+    case DIR_DOWN:  new_head.y++; break;
+    case DIR_LEFT:  new_head.x--; break;
+    case DIR_RIGHT: new_head.x++; break;
+  }
+  
+  // Set new head
+  game.body[0] = new_head;
+
+  // Draw body segments
+  for (int i = 1; i < game.length; i++) {
+    terminal_putentryat('o', vga_entry_color(VGA_COLOR_GREEN, VGA_COLOR_BLACK), game.body[i].x, game.body[i].y);
+  }
+  // Draw head
+  terminal_putentryat('@', vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK), game.body[0].x, game.body[0].y);
+}
+
 void snake_game_task(void) {
   draw_board();
   init_game();
@@ -104,6 +134,7 @@ void snake_game_task(void) {
         if (game.dir != DIR_LEFT) game.dir = DIR_RIGHT;
       }
     }
+    move_snake();
     shell_sleep(10); // Loop speed control (200ms)
   }
 }
