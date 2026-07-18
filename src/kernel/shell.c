@@ -93,6 +93,7 @@ void execute_command(const char *cmd) {
     print("  mv <src> <dest>      - Move/Rename a file\n");
     print("  edit <file>          - Edit a file interactively\n");
     print("  snake                - Play VGA text mode snake game\n");
+    print("  ps                   - List active processes\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
   } else if (strcmp(arg0, "clear") == 0) {
@@ -101,6 +102,9 @@ void execute_command(const char *cmd) {
     print("System uptime: ");
     print_dec(get_tick());
     print(" ticks\n");
+  } else if (strcmp(arg0, "ps") == 0) {
+    print("Active kernel tasks:\n");
+    scheduler_print_processes();
   } else if (strcmp(arg0, "free") == 0) {
     uint32_t max_blocks = pmm_get_max_blocks();
     uint32_t used_blocks = pmm_get_used_blocks();
