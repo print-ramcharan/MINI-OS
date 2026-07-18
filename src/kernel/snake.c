@@ -64,11 +64,46 @@ static void init_game(void) {
   }
 }
 
+static void shell_sleep(uint32_t ticks) {
+  asm volatile("mov $2, %%eax; mov %0, %%ebx; int $0x80"
+               :
+               : "r"(ticks)
+               : "eax", "ebx");
+}
+
+static char shell_read_char(void) {
+  uint32_t val;
+  asm volatile("mov $5, %%eax; int $0x80; mov %%eax, %0"
+               : "=r"(val)
+               :
+               : "eax");
+  return (char)val;
+}
+
+static void snake_exit(void) {
+  asm volatile("mov $3, %%eax; int $0x80" ::: "eax");
+}
+
 void snake_game_task(void) {
   draw_board();
   init_game();
 
   while (1) {
-    asm volatile("mov $4, %%eax; int $0x80" ::: "eax"); // Yield
+    char c = shell_read_char();
+    if (c != 0) {
+      if (c == 27) { // ESC to Quit
+        terminal_initialize();
+        snake_exit();
+      } else if (c == 'w' || c == 'W') {
+        if (game.dir != DIR_DOWN) game.dir = DIR_UP;
+      } else if (c == 's' || c == 'S') {
+        if (game.dir != DIR_UP) game.dir = DIR_DOWN;
+      } else if (c == 'a' || c == 'A') {
+        if (game.dir != DIR_RIGHT) game.dir = DIR_LEFT;
+      } else if (c == 'd' || c == 'D') {
+        if (game.dir != DIR_LEFT) game.dir = DIR_RIGHT;
+      }
+    }
+    shell_sleep(10); // Loop speed control (200ms)
   }
 }
