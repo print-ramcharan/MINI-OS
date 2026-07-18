@@ -167,6 +167,15 @@ static void move_snake(void) {
   }
   // Draw head
   terminal_putentryat('@', vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK), game.body[0].x, game.body[0].y);
+
+  // Draw score
+  extern size_t terminal_row;
+  extern size_t terminal_column;
+  terminal_row = 1;
+  terminal_column = 5;
+  terminal_setcolor(vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+  print("Score: ");
+  print_dec(game.score);
 }
 
 void snake_game_task(void) {
