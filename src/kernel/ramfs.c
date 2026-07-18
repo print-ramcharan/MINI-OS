@@ -116,3 +116,23 @@ int ramfs_copy(const char *src, const char *dest) {
   // Write contents
   return ramfs_write(dest, files[src_idx].content);
 }
+
+int ramfs_rename(const char *src, const char *dest) {
+  int src_idx = -1;
+  for (int i = 0; i < MAX_FILES; i++) {
+    if (files[i].used && strcmp(files[i].name, src) == 0) {
+      src_idx = i;
+      break;
+    }
+  }
+  if (src_idx == -1) return -1; // Source not found
+
+  for (int i = 0; i < MAX_FILES; i++) {
+    if (files[i].used && strcmp(files[i].name, dest) == 0) {
+      return -3; // Destination exists
+    }
+  }
+
+  strcpy(files[src_idx].name, dest);
+  return 0;
+}
