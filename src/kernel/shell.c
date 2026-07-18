@@ -5,6 +5,8 @@
 #include "pmm.h"
 #include "kheap.h"
 #include "ramfs.h"
+#include "scheduler.h"
+#include "editor.h"
 #include <stdint.h>
 
 static void shell_sleep(uint32_t ticks) {
@@ -89,6 +91,7 @@ void execute_command(const char *cmd) {
     print("  rm <file>            - Delete a file\n");
     print("  cp <src> <dest>      - Copy a file\n");
     print("  mv <src> <dest>      - Move/Rename a file\n");
+    print("  edit <file>          - Edit a file interactively\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
   } else if (strcmp(arg0, "clear") == 0) {
@@ -180,6 +183,23 @@ void execute_command(const char *cmd) {
       if (res == -1) print("Error: Source file not found\n");
       else if (res == -3) print("Error: Destination already exists\n");
       else print("File moved.\n");
+    }
+  } else if (strcmp(arg0, "edit") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: edit <filename>\n");
+    } else {
+      int file_len = 0;
+      while (arg1[file_len] && file_len < 31) {
+        editor_target_file[file_len] = arg1[file_len];
+        file_len++;
+      }
+      editor_target_file[file_len] = '\0';
+      process_t *child = create_process(editor_task);
+      while (child->state != PROCESS_DEAD) {
+        shell_sleep(5);
+      }
+      terminal_initialize();
+      print("Welcome back to the MINI OS Shell!\n\n");
     }
   } else if (strcmp(arg0, "write") == 0) {
     if (arg1[0] == '\0' || arg2[0] == '\0') {
