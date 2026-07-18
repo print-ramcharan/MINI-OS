@@ -97,3 +97,21 @@ int ramfs_delete(const char *name) {
   }
   return -1; // Not found
 }
+
+int ramfs_copy(const char *src, const char *dest) {
+  int src_idx = -1;
+  for (int i = 0; i < MAX_FILES; i++) {
+    if (files[i].used && strcmp(files[i].name, src) == 0) {
+      src_idx = i;
+      break;
+    }
+  }
+  if (src_idx == -1) return -1; // Source not found
+
+  // Create destination
+  int res = ramfs_create(dest);
+  if (res < 0) return res; // Error creating destination
+
+  // Write contents
+  return ramfs_write(dest, files[src_idx].content);
+}
