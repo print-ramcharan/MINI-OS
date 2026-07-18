@@ -86,6 +86,7 @@ void execute_command(const char *cmd) {
     print("  touch <file>         - Create an empty file\n");
     print("  write <file> <text>  - Write text content to a file\n");
     print("  cat <file>           - Display the content of a file\n");
+    print("  rm <file>            - Delete a file\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
   } else if (strcmp(arg0, "clear") == 0) {
@@ -150,6 +151,14 @@ void execute_command(const char *cmd) {
       if (res == -1) print("Error: File already exists\n");
       else if (res == -2) print("Error: File system full\n");
       else print("File created.\n");
+    }
+  } else if (strcmp(arg0, "rm") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: rm <filename>\n");
+    } else {
+      int res = ramfs_delete(arg1);
+      if (res == -1) print("Error: File not found\n");
+      else print("File deleted.\n");
     }
   } else if (strcmp(arg0, "write") == 0) {
     if (arg1[0] == '\0' || arg2[0] == '\0') {
