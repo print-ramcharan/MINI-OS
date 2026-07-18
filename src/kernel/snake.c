@@ -1,6 +1,7 @@
 #include "snake.h"
 #include "vga.h"
 #include "syscall.h"
+#include "timer.h"
 #include <stdint.h>
 
 static void draw_board(void) {
@@ -38,6 +39,32 @@ static void draw_board(void) {
 
 static snake_game_t game;
 
+static void spawn_food(void) {
+  uint32_t ticks = get_tick();
+  
+  // Calculate raw random coords
+  int rx = BOARD_MIN_X + (int)(ticks % (BOARD_MAX_X - BOARD_MIN_X + 1));
+  int ry = BOARD_MIN_Y + (int)((ticks / 7) % (BOARD_MAX_Y - BOARD_MIN_Y + 1));
+
+  // Check if overlaps with body
+  for (int i = 0; i < game.length; i++) {
+    if (game.body[i].x == rx && game.body[i].y == ry) {
+      rx++;
+      if (rx > BOARD_MAX_X) {
+        rx = BOARD_MIN_X;
+        ry++;
+        if (ry > BOARD_MAX_Y) ry = BOARD_MIN_Y;
+      }
+    }
+  }
+
+  game.food.x = rx;
+  game.food.y = ry;
+
+  // Draw food (red '*')
+  terminal_putentryat('*', vga_entry_color(VGA_COLOR_LIGHT_RED, VGA_COLOR_BLACK), game.food.x, game.food.y);
+}
+
 static void init_game(void) {
   game.length = 3;
   game.dir = DIR_RIGHT;
@@ -52,16 +79,15 @@ static void init_game(void) {
   game.body[2].x = 38;
   game.body[2].y = 12;
 
-  // Place food at static position initially
-  game.food.x = 25;
-  game.food.y = 10;
-
   // Draw snake head
   terminal_putentryat('@', vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK), game.body[0].x, game.body[0].y);
   // Draw body segments
   for (int i = 1; i < game.length; i++) {
     terminal_putentryat('o', vga_entry_color(VGA_COLOR_GREEN, VGA_COLOR_BLACK), game.body[i].x, game.body[i].y);
   }
+
+  // Place food
+  spawn_food();
 }
 
 static void shell_sleep(uint32_t ticks) {
