@@ -81,7 +81,11 @@ void editor_task(void) {
       } else if (c == 19) { // F1 (Save)
         // Handle F1 (Save) in commit 11
       } else if (c == '\b') {
-        // Handle Backspace in commit 10
+        if (editor_len > 0) {
+          editor_len--;
+          editor_buf[editor_len] = '\0';
+          terminal_putchar('\b');
+        }
       } else {
         if (editor_len < EDITOR_BUFFER_SIZE - 1) {
           editor_buf[editor_len++] = c;
