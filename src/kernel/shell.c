@@ -92,6 +92,7 @@ void execute_command(const char *cmd) {
     print("  cp <src> <dest>      - Copy a file\n");
     print("  mv <src> <dest>      - Move/Rename a file\n");
     print("  edit <file>          - Edit a file interactively\n");
+    print("  snake                - Play VGA text mode snake game\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
   } else if (strcmp(arg0, "clear") == 0) {
@@ -201,6 +202,14 @@ void execute_command(const char *cmd) {
       terminal_initialize();
       print("Welcome back to the MINI OS Shell!\n\n");
     }
+  } else if (strcmp(arg0, "snake") == 0) {
+    extern void snake_game_task(void);
+    process_t *child = create_process(snake_game_task);
+    while (child->state != PROCESS_DEAD) {
+      shell_sleep(5);
+    }
+    terminal_initialize();
+    print("Welcome back to the MINI OS Shell!\n\n");
   } else if (strcmp(arg0, "write") == 0) {
     if (arg1[0] == '\0' || arg2[0] == '\0') {
       print("Usage: write <filename> <content>\n");
