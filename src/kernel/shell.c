@@ -20,6 +20,18 @@ static void shell_exit(void) {
   asm volatile("mov $3, %%eax; int $0x80" ::: "eax");
 }
 
+static int atoi(const char *str) {
+  int res = 0;
+  for (int i = 0; str[i] != '\0'; ++i) {
+    if (str[i] >= '0' && str[i] <= '9') {
+      res = res * 10 + (str[i] - '0');
+    } else {
+      break;
+    }
+  }
+  return res;
+}
+
 static char shell_read_char(void) {
   uint32_t val;
   asm volatile("mov $5, %%eax; int $0x80; mov %%eax, %0"
@@ -94,6 +106,7 @@ void execute_command(const char *cmd) {
     print("  edit <file>          - Edit a file interactively\n");
     print("  snake                - Play VGA text mode snake game\n");
     print("  ps                   - List active processes\n");
+    print("  kill <pid>           - Kill a process by PID\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
   } else if (strcmp(arg0, "clear") == 0) {
@@ -105,6 +118,20 @@ void execute_command(const char *cmd) {
   } else if (strcmp(arg0, "ps") == 0) {
     print("Active kernel tasks:\n");
     scheduler_print_processes();
+  } else if (strcmp(arg0, "kill") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: kill <pid>\n");
+    } else {
+      int pid = atoi(arg1);
+      int res = scheduler_kill_process(pid);
+      if (res == 0) {
+        print("Process "); print_dec(pid); print(" terminated.\n");
+      } else if (res == -2) {
+        print("Error: Cannot kill the kernel shell.\n");
+      } else {
+        print("Error: Process "); print_dec(pid); print(" not found.\n");
+      }
+    }
   } else if (strcmp(arg0, "free") == 0) {
     uint32_t max_blocks = pmm_get_max_blocks();
     uint32_t used_blocks = pmm_get_used_blocks();

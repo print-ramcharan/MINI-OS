@@ -147,3 +147,19 @@ void scheduler_print_processes(void) {
     temp = temp->next;
   } while (temp != ready_queue);
 }
+
+int scheduler_kill_process(uint32_t pid) {
+  if (!ready_queue) return -1;
+  if (pid == 1) return -2; // Cannot kill shell
+
+  process_t *temp = ready_queue;
+  do {
+    if (temp->pid == pid) {
+      temp->state = PROCESS_DEAD;
+      return 0;
+    }
+    temp = temp->next;
+  } while (temp != ready_queue);
+
+  return -1; // Not found
+}
