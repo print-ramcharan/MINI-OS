@@ -123,3 +123,27 @@ void scheduler_tick(void) {
 }
 
 void enable_scheduler() { scheduler_enabled = 1; }
+
+void scheduler_print_processes(void) {
+  if (!ready_queue) {
+    print("No processes running.\n");
+    return;
+  }
+  print("  PID \t STATE   \t SLEEP_TICKS\n");
+  process_t *temp = ready_queue;
+  do {
+    print("  ");
+    print_dec(temp->pid);
+    print("   \t ");
+    switch (temp->state) {
+      case PROCESS_RUNNING: print("RUNNING "); break;
+      case PROCESS_READY:   print("READY   "); break;
+      case PROCESS_BLOCKED: print("BLOCKED "); break;
+      case PROCESS_DEAD:    print("DEAD    "); break;
+    }
+    print(" \t ");
+    print_dec(temp->sleep_ticks);
+    print("\n");
+    temp = temp->next;
+  } while (temp != ready_queue);
+}
