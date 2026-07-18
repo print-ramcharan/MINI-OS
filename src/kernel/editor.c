@@ -37,11 +37,58 @@ static void draw_ui(void) {
   terminal_column = 0;
 }
 
+static void shell_sleep(uint32_t ticks) {
+  asm volatile("mov $2, %%eax; mov %0, %%ebx; int $0x80"
+               :
+               : "r"(ticks)
+               : "eax", "ebx");
+}
+
+static char shell_read_char(void) {
+  uint32_t val;
+  asm volatile("mov $5, %%eax; int $0x80; mov %%eax, %0"
+               : "=r"(val)
+               :
+               : "eax");
+  return (char)val;
+}
+
+#define EDITOR_BUFFER_SIZE 256
+static char editor_buf[EDITOR_BUFFER_SIZE];
+static int editor_len = 0;
+
 void editor_task(void) {
   draw_ui();
   
-  // Basic loop that yields for now
+  editor_len = 0;
+  
+  // Try loading file content if it exists
+  const char *existing_content = ramfs_read(editor_target_file);
+  if (existing_content) {
+    int i = 0;
+    while (existing_content[i] && i < EDITOR_BUFFER_SIZE - 1) {
+      char c = existing_content[i++];
+      editor_buf[editor_len++] = c;
+      terminal_putchar(c);
+    }
+  }
+
   while (1) {
-    asm volatile("mov $4, %%eax; int $0x80" ::: "eax"); // Yield
+    char c = shell_read_char();
+    if (c != 0) {
+      if (c == 27) { // ESC
+        // Handle ESC (Exit) in commit 11
+      } else if (c == 19) { // F1 (Save)
+        // Handle F1 (Save) in commit 11
+      } else if (c == '\b') {
+        // Handle Backspace in commit 10
+      } else {
+        if (editor_len < EDITOR_BUFFER_SIZE - 1) {
+          editor_buf[editor_len++] = c;
+          terminal_putchar(c);
+        }
+      }
+    }
+    shell_sleep(2); // Yield CPU
   }
 }
