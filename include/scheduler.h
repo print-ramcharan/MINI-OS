@@ -38,4 +38,7 @@ process_t *create_process(void (*entry_point)());
 // Called by the timer interrupt to switch to the next ready process
 void schedule(registers_t *regs);
 
+void scheduler_print_processes(void);
+int scheduler_kill_process(uint32_t pid);
+
 #endif

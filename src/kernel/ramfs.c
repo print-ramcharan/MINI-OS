@@ -84,3 +84,55 @@ void ramfs_list(void) {
     print("  (empty directory)\n");
   }
 }
+
+int ramfs_delete(const char *name) {
+  for (int i = 0; i < MAX_FILES; i++) {
+    if (files[i].used && strcmp(files[i].name, name) == 0) {
+      files[i].used = 0;
+      files[i].name[0] = '\0';
+      files[i].content[0] = '\0';
+      files[i].size = 0;
+      return 0;
+    }
+  }
+  return -1; // Not found
+}
+
+int ramfs_copy(const char *src, const char *dest) {
+  int src_idx = -1;
+  for (int i = 0; i < MAX_FILES; i++) {
+    if (files[i].used && strcmp(files[i].name, src) == 0) {
+      src_idx = i;
+      break;
+    }
+  }
+  if (src_idx == -1) return -1; // Source not found
+
+  // Create destination
+  int res = ramfs_create(dest);
+  if (res == -1) return -3; // Destination exists
+  if (res == -2) return -2; // Full
+
+  // Write contents
+  return ramfs_write(dest, files[src_idx].content);
+}
+
+int ramfs_rename(const char *src, const char *dest) {
+  int src_idx = -1;
+  for (int i = 0; i < MAX_FILES; i++) {
+    if (files[i].used && strcmp(files[i].name, src) == 0) {
+      src_idx = i;
+      break;
+    }
+  }
+  if (src_idx == -1) return -1; // Source not found
+
+  for (int i = 0; i < MAX_FILES; i++) {
+    if (files[i].used && strcmp(files[i].name, dest) == 0) {
+      return -3; // Destination exists
+    }
+  }
+
+  strcpy(files[src_idx].name, dest);
+  return 0;
+}

@@ -5,6 +5,8 @@
 #include "pmm.h"
 #include "kheap.h"
 #include "ramfs.h"
+#include "scheduler.h"
+#include "editor.h"
 #include <stdint.h>
 
 static void shell_sleep(uint32_t ticks) {
@@ -16,6 +18,18 @@ static void shell_sleep(uint32_t ticks) {
 
 static void shell_exit(void) {
   asm volatile("mov $3, %%eax; int $0x80" ::: "eax");
+}
+
+static int atoi(const char *str) {
+  int res = 0;
+  for (int i = 0; str[i] != '\0'; ++i) {
+    if (str[i] >= '0' && str[i] <= '9') {
+      res = res * 10 + (str[i] - '0');
+    } else {
+      break;
+    }
+  }
+  return res;
 }
 
 static char shell_read_char(void) {
@@ -86,6 +100,13 @@ void execute_command(const char *cmd) {
     print("  touch <file>         - Create an empty file\n");
     print("  write <file> <text>  - Write text content to a file\n");
     print("  cat <file>           - Display the content of a file\n");
+    print("  rm <file>            - Delete a file\n");
+    print("  cp <src> <dest>      - Copy a file\n");
+    print("  mv <src> <dest>      - Move/Rename a file\n");
+    print("  edit <file>          - Edit a file interactively\n");
+    print("  snake                - Play VGA text mode snake game\n");
+    print("  ps                   - List active processes\n");
+    print("  kill <pid>           - Kill a process by PID\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
   } else if (strcmp(arg0, "clear") == 0) {
@@ -94,6 +115,23 @@ void execute_command(const char *cmd) {
     print("System uptime: ");
     print_dec(get_tick());
     print(" ticks\n");
+  } else if (strcmp(arg0, "ps") == 0) {
+    print("Active kernel tasks:\n");
+    scheduler_print_processes();
+  } else if (strcmp(arg0, "kill") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: kill <pid>\n");
+    } else {
+      int pid = atoi(arg1);
+      int res = scheduler_kill_process(pid);
+      if (res == 0) {
+        print("Process "); print_dec(pid); print(" terminated.\n");
+      } else if (res == -2) {
+        print("Error: Cannot kill the kernel shell.\n");
+      } else {
+        print("Error: Process "); print_dec(pid); print(" not found.\n");
+      }
+    }
   } else if (strcmp(arg0, "free") == 0) {
     uint32_t max_blocks = pmm_get_max_blocks();
     uint32_t used_blocks = pmm_get_used_blocks();
@@ -151,6 +189,58 @@ void execute_command(const char *cmd) {
       else if (res == -2) print("Error: File system full\n");
       else print("File created.\n");
     }
+  } else if (strcmp(arg0, "rm") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: rm <filename>\n");
+    } else {
+      int res = ramfs_delete(arg1);
+      if (res == -1) print("Error: File not found\n");
+      else print("File deleted.\n");
+    }
+  } else if (strcmp(arg0, "cp") == 0) {
+    if (arg1[0] == '\0' || arg2[0] == '\0') {
+      print("Usage: cp <source> <dest>\n");
+    } else {
+      int res = ramfs_copy(arg1, arg2);
+      if (res == -1) print("Error: Source file not found\n");
+      else if (res == -2) print("Error: File system full\n");
+      else if (res == -3) print("Error: Destination already exists\n");
+      else print("File copied.\n");
+    }
+  } else if (strcmp(arg0, "mv") == 0) {
+    if (arg1[0] == '\0' || arg2[0] == '\0') {
+      print("Usage: mv <source> <dest>\n");
+    } else {
+      int res = ramfs_rename(arg1, arg2);
+      if (res == -1) print("Error: Source file not found\n");
+      else if (res == -3) print("Error: Destination already exists\n");
+      else print("File moved.\n");
+    }
+  } else if (strcmp(arg0, "edit") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: edit <filename>\n");
+    } else {
+      int file_len = 0;
+      while (arg1[file_len] && file_len < 31) {
+        editor_target_file[file_len] = arg1[file_len];
+        file_len++;
+      }
+      editor_target_file[file_len] = '\0';
+      process_t *child = create_process(editor_task);
+      while (child->state != PROCESS_DEAD) {
+        shell_sleep(5);
+      }
+      terminal_initialize();
+      print("Welcome back to the MINI OS Shell!\n\n");
+    }
+  } else if (strcmp(arg0, "snake") == 0) {
+    extern void snake_game_task(void);
+    process_t *child = create_process(snake_game_task);
+    while (child->state != PROCESS_DEAD) {
+      shell_sleep(5);
+    }
+    terminal_initialize();
+    print("Welcome back to the MINI OS Shell!\n\n");
   } else if (strcmp(arg0, "write") == 0) {
     if (arg1[0] == '\0' || arg2[0] == '\0') {
       print("Usage: write <filename> <content>\n");
