@@ -20,5 +20,6 @@ int ramfs_create(const char *name);
 int ramfs_write(const char *name, const char *content);
 const char *ramfs_read(const char *name);
 void ramfs_list(void);
+int ramfs_delete(const char *name);
 
 #endif

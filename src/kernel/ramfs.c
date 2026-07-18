@@ -84,3 +84,16 @@ void ramfs_list(void) {
     print("  (empty directory)\n");
   }
 }
+
+int ramfs_delete(const char *name) {
+  for (int i = 0; i < MAX_FILES; i++) {
+    if (files[i].used && strcmp(files[i].name, name) == 0) {
+      files[i].used = 0;
+      files[i].name[0] = '\0';
+      files[i].content[0] = '\0';
+      files[i].size = 0;
+      return 0;
+    }
+  }
+  return -1; // Not found
+}
