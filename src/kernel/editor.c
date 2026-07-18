@@ -53,6 +53,10 @@ static char shell_read_char(void) {
   return (char)val;
 }
 
+static void editor_exit(void) {
+  asm volatile("mov $3, %%eax; int $0x80" ::: "eax");
+}
+
 #define EDITOR_BUFFER_SIZE 256
 static char editor_buf[EDITOR_BUFFER_SIZE];
 static int editor_len = 0;
@@ -77,9 +81,24 @@ void editor_task(void) {
     char c = shell_read_char();
     if (c != 0) {
       if (c == 27) { // ESC
-        // Handle ESC (Exit) in commit 11
+        terminal_initialize();
+        editor_exit();
       } else if (c == 19) { // F1 (Save)
-        // Handle F1 (Save) in commit 11
+        editor_buf[editor_len] = '\0';
+        // If file doesn't exist, create it
+        if (!ramfs_read(editor_target_file)) {
+          ramfs_create(editor_target_file);
+        }
+        ramfs_write(editor_target_file, editor_buf);
+        
+        // Show saving message
+        terminal_initialize();
+        print("\nSaving file ");
+        print(editor_target_file);
+        print("...\n");
+        shell_sleep(30);
+        terminal_initialize();
+        editor_exit();
       } else if (c == '\b') {
         if (editor_len > 0) {
           editor_len--;
