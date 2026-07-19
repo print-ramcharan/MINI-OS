@@ -96,7 +96,10 @@ static int sys_close(int fd) {
   current_process->ofiles[fd].offset = 0;
   return 0;
 }
-static int sys_delete(const char *filename) { (void)filename; return -1; }
+static int sys_delete(const char *filename) {
+  if (!filename) return -1;
+  return ramfs_delete(filename);
+}
 
 void syscall_handler(registers_t *regs) {
   // The syscall number is passed in EAX
