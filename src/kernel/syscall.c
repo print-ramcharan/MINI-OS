@@ -63,7 +63,23 @@ static int sys_open(const char *filename) {
 
   return fd;
 }
-static int sys_read(int fd, char *buf, uint32_t size) { (void)fd; (void)buf; (void)size; return -1; }
+static int sys_read(int fd, char *buf, uint32_t size) {
+  if (!current_process || fd < 0 || fd >= MAX_PROCESS_OPEN_FILES) return -1;
+  if (!current_process->ofiles[fd].used || !buf) return -1;
+
+  const char *content = ramfs_read(current_process->ofiles[fd].filename);
+  if (!content) return -1;
+
+  uint32_t offset = current_process->ofiles[fd].offset;
+  uint32_t i = 0;
+  while (content[offset + i] && i < size) {
+    buf[i] = content[offset + i];
+    i++;
+  }
+  buf[i] = '\0';
+  current_process->ofiles[fd].offset += i;
+  return (int)i;
+}
 static int sys_write_file(int fd, const char *buf, uint32_t size) { (void)fd; (void)buf; (void)size; return -1; }
 static int sys_close(int fd) { (void)fd; return -1; }
 static int sys_delete(const char *filename) { (void)filename; return -1; }
