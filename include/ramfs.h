@@ -7,6 +7,7 @@
 #define MAX_FILES 16
 #define MAX_FILENAME_LEN 32
 #define MAX_FILE_SIZE 256
+#define MAX_PROCESS_OPEN_FILES 8
 
 typedef struct {
   char name[MAX_FILENAME_LEN];
