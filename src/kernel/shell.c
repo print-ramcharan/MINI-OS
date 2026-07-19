@@ -20,6 +20,36 @@ static void shell_exit(void) {
   asm volatile("mov $3, %%eax; int $0x80" ::: "eax");
 }
 
+static int shell_open(const char *filename) {
+  int val;
+  asm volatile("int $0x80" : "=a"(val) : "a"(6), "b"(filename));
+  return val;
+}
+
+static int shell_close(int fd) {
+  int val;
+  asm volatile("int $0x80" : "=a"(val) : "a"(9), "b"(fd));
+  return val;
+}
+
+static int shell_read(int fd, char *buf, uint32_t size) {
+  int val;
+  asm volatile("int $0x80" : "=a"(val) : "a"(7), "b"(fd), "c"(buf), "d"(size));
+  return val;
+}
+
+static int shell_write_file(int fd, const char *buf, uint32_t size) {
+  int val;
+  asm volatile("int $0x80" : "=a"(val) : "a"(8), "b"(fd), "c"(buf), "d"(size));
+  return val;
+}
+
+static int shell_delete(const char *filename) {
+  int val;
+  asm volatile("int $0x80" : "=a"(val) : "a"(10), "b"(filename));
+  return val;
+}
+
 static int atoi(const char *str) {
   int res = 0;
   for (int i = 0; str[i] != '\0'; ++i) {
@@ -184,16 +214,19 @@ void execute_command(const char *cmd) {
     if (arg1[0] == '\0') {
       print("Usage: touch <filename>\n");
     } else {
-      int res = ramfs_create(arg1);
-      if (res == -1) print("Error: File already exists\n");
-      else if (res == -2) print("Error: File system full\n");
-      else print("File created.\n");
+      int fd = shell_open(arg1);
+      if (fd < 0) {
+        print("Error: Could not create file\n");
+      } else {
+        print("File created.\n");
+        shell_close(fd);
+      }
     }
   } else if (strcmp(arg0, "rm") == 0) {
     if (arg1[0] == '\0') {
       print("Usage: rm <filename>\n");
     } else {
-      int res = ramfs_delete(arg1);
+      int res = shell_delete(arg1);
       if (res == -1) print("Error: File not found\n");
       else print("File deleted.\n");
     }
@@ -245,19 +278,36 @@ void execute_command(const char *cmd) {
     if (arg1[0] == '\0' || arg2[0] == '\0') {
       print("Usage: write <filename> <content>\n");
     } else {
-      int res = ramfs_write(arg1, arg2);
-      if (res == -1) print("Error: File not found\n");
-      else print("File written.\n");
+      int fd = shell_open(arg1);
+      if (fd < 0) {
+        print("Error: Could not open/create file\n");
+      } else {
+        int len = 0;
+        while (arg2[len]) len++;
+        int res = shell_write_file(fd, arg2, len);
+        if (res == -1) print("Error: File not found\n");
+        else print("File written.\n");
+        shell_close(fd);
+      }
     }
   } else if (strcmp(arg0, "cat") == 0) {
     if (arg1[0] == '\0') {
       print("Usage: cat <filename>\n");
     } else {
-      const char *content = ramfs_read(arg1);
-      if (!content) print("Error: File not found\n");
-      else {
-        print(content);
-        print("\n");
+      int fd = shell_open(arg1);
+      if (fd < 0) {
+        print("Error: File not found\n");
+      } else {
+        char buf[256];
+        int bytes = shell_read(fd, buf, sizeof(buf) - 1);
+        if (bytes >= 0) {
+          buf[bytes] = '\0';
+          print(buf);
+          print("\n");
+        } else {
+          print("Error: Could not read file\n");
+        }
+        shell_close(fd);
       }
     }
   } else if (strcmp(arg0, "about") == 0) {

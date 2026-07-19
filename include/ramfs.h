@@ -7,6 +7,7 @@
 #define MAX_FILES 16
 #define MAX_FILENAME_LEN 32
 #define MAX_FILE_SIZE 256
+#define MAX_PROCESS_OPEN_FILES 8
 
 typedef struct {
   char name[MAX_FILENAME_LEN];
@@ -14,6 +15,12 @@ typedef struct {
   uint32_t size;
   uint8_t used;
 } ramfs_file_t;
+
+typedef struct {
+  char filename[MAX_FILENAME_LEN];
+  uint32_t offset;
+  uint8_t used;
+} open_file_t;
 
 void ramfs_init(void);
 int ramfs_create(const char *name);
