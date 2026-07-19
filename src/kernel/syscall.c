@@ -3,6 +3,7 @@
 #include "timer.h"
 #include "vga.h"
 #include "keyboard.h"
+#include "ramfs.h"
 
 // System call implementations
 
@@ -33,7 +34,35 @@ static char sys_read_char(void) {
   return keyboard_read_char();
 }
 
-static int sys_open(const char *filename) { (void)filename; return -1; }
+static int sys_open(const char *filename) {
+  if (!current_process || !filename) return -1;
+
+  int fd = -1;
+  for (int i = 0; i < MAX_PROCESS_OPEN_FILES; i++) {
+    if (!current_process->ofiles[i].used) {
+      fd = i;
+      break;
+    }
+  }
+  if (fd == -1) return -1;
+
+  const char *content = ramfs_read(filename);
+  if (!content) {
+    int res = ramfs_create(filename);
+    if (res < 0 && res != -1) return -1;
+  }
+
+  current_process->ofiles[fd].used = 1;
+  current_process->ofiles[fd].offset = 0;
+  int j = 0;
+  while (filename[j] && j < MAX_FILENAME_LEN - 1) {
+    current_process->ofiles[fd].filename[j] = filename[j];
+    j++;
+  }
+  current_process->ofiles[fd].filename[j] = '\0';
+
+  return fd;
+}
 static int sys_read(int fd, char *buf, uint32_t size) { (void)fd; (void)buf; (void)size; return -1; }
 static int sys_write_file(int fd, const char *buf, uint32_t size) { (void)fd; (void)buf; (void)size; return -1; }
 static int sys_close(int fd) { (void)fd; return -1; }
