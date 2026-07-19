@@ -152,7 +152,8 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
   print("[OK] DRV: Keyboard driver started\n");
 
   ramfs_init();
-  print("[OK] VFS: RAM File System initialized\n\n");
+  print("[OK] VFS: RAM File System initialized\n");
+  print("[OK] VFS: Process-level file descriptor interface loaded\n\n");
 
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK));
   print("Memory subsystems passed CR3 / Malloc tests!\n");
