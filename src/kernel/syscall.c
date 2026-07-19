@@ -80,7 +80,13 @@ static int sys_read(int fd, char *buf, uint32_t size) {
   current_process->ofiles[fd].offset += i;
   return (int)i;
 }
-static int sys_write_file(int fd, const char *buf, uint32_t size) { (void)fd; (void)buf; (void)size; return -1; }
+static int sys_write_file(int fd, const char *buf, uint32_t size) {
+  (void)size;
+  if (!current_process || fd < 0 || fd >= MAX_PROCESS_OPEN_FILES) return -1;
+  if (!current_process->ofiles[fd].used || !buf) return -1;
+
+  return ramfs_write(current_process->ofiles[fd].filename, buf);
+}
 static int sys_close(int fd) { (void)fd; return -1; }
 static int sys_delete(const char *filename) { (void)filename; return -1; }
 
