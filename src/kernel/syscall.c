@@ -33,6 +33,12 @@ static char sys_read_char(void) {
   return keyboard_read_char();
 }
 
+static int sys_open(const char *filename) { (void)filename; return -1; }
+static int sys_read(int fd, char *buf, uint32_t size) { (void)fd; (void)buf; (void)size; return -1; }
+static int sys_write_file(int fd, const char *buf, uint32_t size) { (void)fd; (void)buf; (void)size; return -1; }
+static int sys_close(int fd) { (void)fd; return -1; }
+static int sys_delete(const char *filename) { (void)filename; return -1; }
+
 void syscall_handler(registers_t *regs) {
   // The syscall number is passed in EAX
   // Arguments are passed in EBX, ECX, EDX, ESI, EDI
@@ -54,6 +60,21 @@ void syscall_handler(registers_t *regs) {
     break;
   case SYS_READ_CHAR:
     regs->eax = (uint32_t)sys_read_char();
+    break;
+  case SYS_OPEN:
+    regs->eax = (uint32_t)sys_open((const char *)regs->ebx);
+    break;
+  case SYS_READ:
+    regs->eax = (uint32_t)sys_read((int)regs->ebx, (char *)regs->ecx, (uint32_t)regs->edx);
+    break;
+  case SYS_WRITE_FILE:
+    regs->eax = (uint32_t)sys_write_file((int)regs->ebx, (const char *)regs->ecx, (uint32_t)regs->edx);
+    break;
+  case SYS_CLOSE:
+    regs->eax = (uint32_t)sys_close((int)regs->ebx);
+    break;
+  case SYS_DELETE:
+    regs->eax = (uint32_t)sys_delete((const char *)regs->ebx);
     break;
   default:
     print("[SYSCALL] Unknown syscall number: ");
