@@ -278,9 +278,17 @@ void execute_command(const char *cmd) {
     if (arg1[0] == '\0' || arg2[0] == '\0') {
       print("Usage: write <filename> <content>\n");
     } else {
-      int res = ramfs_write(arg1, arg2);
-      if (res == -1) print("Error: File not found\n");
-      else print("File written.\n");
+      int fd = shell_open(arg1);
+      if (fd < 0) {
+        print("Error: Could not open/create file\n");
+      } else {
+        int len = 0;
+        while (arg2[len]) len++;
+        int res = shell_write_file(fd, arg2, len);
+        if (res == -1) print("Error: File not found\n");
+        else print("File written.\n");
+        shell_close(fd);
+      }
     }
   } else if (strcmp(arg0, "cat") == 0) {
     if (arg1[0] == '\0') {
