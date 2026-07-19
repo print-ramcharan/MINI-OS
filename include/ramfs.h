@@ -16,6 +16,12 @@ typedef struct {
   uint8_t used;
 } ramfs_file_t;
 
+typedef struct {
+  char filename[MAX_FILENAME_LEN];
+  uint32_t offset;
+  uint8_t used;
+} open_file_t;
+
 void ramfs_init(void);
 int ramfs_create(const char *name);
 int ramfs_write(const char *name, const char *content);

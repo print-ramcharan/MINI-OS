@@ -16,6 +16,8 @@ typedef struct context {
   uint32_t edi, esi, ebx, ebp, eip;
 } context_t;
 
+#include "ramfs.h"
+
 typedef struct process {
   uint32_t pid;
   process_state_t state;
@@ -23,6 +25,7 @@ typedef struct process {
   uint32_t ebp;          // The base pointer
   uint32_t kernel_stack; // Top of the allocated stack
   uint32_t sleep_ticks;  // Sleep duration remaining in ticks
+  open_file_t ofiles[MAX_PROCESS_OPEN_FILES];
 
   struct process *next; // Round-robin links
 } process_t;
