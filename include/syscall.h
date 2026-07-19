@@ -9,6 +9,11 @@
 #define SYS_EXIT 3
 #define SYS_YIELD 4
 #define SYS_READ_CHAR 5
+#define SYS_OPEN 6
+#define SYS_READ 7
+#define SYS_WRITE_FILE 8
+#define SYS_CLOSE 9
+#define SYS_DELETE 10
 
 void syscall_init(void);
 
