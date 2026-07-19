@@ -87,7 +87,15 @@ static int sys_write_file(int fd, const char *buf, uint32_t size) {
 
   return ramfs_write(current_process->ofiles[fd].filename, buf);
 }
-static int sys_close(int fd) { (void)fd; return -1; }
+static int sys_close(int fd) {
+  if (!current_process || fd < 0 || fd >= MAX_PROCESS_OPEN_FILES) return -1;
+  if (!current_process->ofiles[fd].used) return -1;
+
+  current_process->ofiles[fd].used = 0;
+  current_process->ofiles[fd].filename[0] = '\0';
+  current_process->ofiles[fd].offset = 0;
+  return 0;
+}
 static int sys_delete(const char *filename) { (void)filename; return -1; }
 
 void syscall_handler(registers_t *regs) {
