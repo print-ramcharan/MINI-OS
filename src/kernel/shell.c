@@ -226,7 +226,7 @@ void execute_command(const char *cmd) {
     if (arg1[0] == '\0') {
       print("Usage: rm <filename>\n");
     } else {
-      int res = ramfs_delete(arg1);
+      int res = shell_delete(arg1);
       if (res == -1) print("Error: File not found\n");
       else print("File deleted.\n");
     }
