@@ -25,6 +25,11 @@ process_t *create_process(void (*entry_point)()) {
   new_proc->pid = next_pid++;
   new_proc->state = PROCESS_READY;
   new_proc->sleep_ticks = 0;
+  for (int i = 0; i < MAX_PROCESS_OPEN_FILES; i++) {
+    new_proc->ofiles[i].used = 0;
+    new_proc->ofiles[i].filename[0] = '\0';
+    new_proc->ofiles[i].offset = 0;
+  }
   new_proc->next = NULL;
 
   // Allocate stack physical page (4KB)
