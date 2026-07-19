@@ -20,6 +20,51 @@ static void shell_exit(void) {
   asm volatile("mov $3, %%eax; int $0x80" ::: "eax");
 }
 
+static int shell_open(const char *filename) {
+  uint32_t val;
+  asm volatile("mov $6, %%eax; mov %1, %%ebx; int $0x80; mov %%eax, %0"
+               : "=r"(val)
+               : "r"(filename)
+               : "eax", "ebx");
+  return (int)val;
+}
+
+static int shell_close(int fd) {
+  uint32_t val;
+  asm volatile("mov $9, %%eax; mov %1, %%ebx; int $0x80; mov %%eax, %0"
+               : "=r"(val)
+               : "r"(fd)
+               : "eax", "ebx");
+  return (int)val;
+}
+
+static int shell_read(int fd, char *buf, uint32_t size) {
+  uint32_t val;
+  asm volatile("mov $7, %%eax; mov %1, %%ebx; mov %2, %%ecx; mov %3, %%edx; int $0x80; mov %%eax, %0"
+               : "=r"(val)
+               : "r"(fd), "r"(buf), "r"(size)
+               : "eax", "ebx", "ecx", "edx");
+  return (int)val;
+}
+
+static int shell_write_file(int fd, const char *buf, uint32_t size) {
+  uint32_t val;
+  asm volatile("mov $8, %%eax; mov %1, %%ebx; mov %2, %%ecx; mov %3, %%edx; int $0x80; mov %%eax, %0"
+               : "=r"(val)
+               : "r"(fd), "r"(buf), "r"(size)
+               : "eax", "ebx", "ecx", "edx");
+  return (int)val;
+}
+
+static int shell_delete(const char *filename) {
+  uint32_t val;
+  asm volatile("mov $10, %%eax; mov %1, %%ebx; int $0x80; mov %%eax, %0"
+               : "=r"(val)
+               : "r"(filename)
+               : "eax", "ebx");
+  return (int)val;
+}
+
 static int atoi(const char *str) {
   int res = 0;
   for (int i = 0; str[i] != '\0'; ++i) {
@@ -184,10 +229,13 @@ void execute_command(const char *cmd) {
     if (arg1[0] == '\0') {
       print("Usage: touch <filename>\n");
     } else {
-      int res = ramfs_create(arg1);
-      if (res == -1) print("Error: File already exists\n");
-      else if (res == -2) print("Error: File system full\n");
-      else print("File created.\n");
+      int fd = shell_open(arg1);
+      if (fd < 0) {
+        print("Error: Could not create file\n");
+      } else {
+        print("File created.\n");
+        shell_close(fd);
+      }
     }
   } else if (strcmp(arg0, "rm") == 0) {
     if (arg1[0] == '\0') {
