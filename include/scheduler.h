@@ -11,6 +11,10 @@ typedef enum {
   PROCESS_DEAD
 } process_state_t;
 
+#define DEFAULT_PROCESS_PRIORITY 10
+#define MAX_PROCESS_PRIORITY 20
+#define MIN_PROCESS_PRIORITY 1
+
 // Context structure describing the CPU registers during a context switch
 typedef struct context {
   uint32_t edi, esi, ebx, ebp, eip;
