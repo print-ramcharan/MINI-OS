@@ -50,6 +50,12 @@ static int shell_delete(const char *filename) {
   return val;
 }
 
+static int shell_set_priority(uint32_t pid, uint32_t priority) {
+  int val;
+  asm volatile("int $0x80" : "=a"(val) : "a"(11), "b"(pid), "c"(priority));
+  return val;
+}
+
 static int atoi(const char *str) {
   int res = 0;
   for (int i = 0; str[i] != '\0'; ++i) {
