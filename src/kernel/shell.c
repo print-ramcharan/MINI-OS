@@ -168,6 +168,19 @@ void execute_command(const char *cmd) {
         print("Error: Process "); print_dec(pid); print(" not found.\n");
       }
     }
+  } else if (strcmp(arg0, "nice") == 0) {
+    if (arg1[0] == '\0' || arg2[0] == '\0') {
+      print("Usage: nice <pid> <priority>\n");
+    } else {
+      int pid = atoi(arg1);
+      int priority = atoi(arg2);
+      int res = shell_set_priority(pid, priority);
+      if (res == 0) {
+        print("Priority of process "); print_dec(pid); print(" set to "); print_dec(priority); print(".\n");
+      } else {
+        print("Error: Could not set priority. Ensure priority is between 1 and 20.\n");
+      }
+    }
   } else if (strcmp(arg0, "free") == 0) {
     uint32_t max_blocks = pmm_get_max_blocks();
     uint32_t used_blocks = pmm_get_used_blocks();
