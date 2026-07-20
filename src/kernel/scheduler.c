@@ -135,7 +135,7 @@ void scheduler_print_processes(void) {
     print("No processes running.\n");
     return;
   }
-  print("  PID \t STATE   \t SLEEP_TICKS\n");
+  print("  PID \t STATE   \t PRIORITY \t SLEEP_TICKS\n");
   process_t *temp = ready_queue;
   do {
     print("  ");
@@ -148,6 +148,8 @@ void scheduler_print_processes(void) {
       case PROCESS_DEAD:    print("DEAD    "); break;
     }
     print(" \t ");
+    print_dec(temp->priority);
+    print(" \t\t ");
     print_dec(temp->sleep_ticks);
     print("\n");
     temp = temp->next;
