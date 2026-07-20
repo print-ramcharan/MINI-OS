@@ -143,6 +143,7 @@ void execute_command(const char *cmd) {
     print("  snake                - Play VGA text mode snake game\n");
     print("  ps                   - List active processes\n");
     print("  kill <pid>           - Kill a process by PID\n");
+    print("  nice <pid> <pri>     - Set process scheduling priority (1-20)\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
   } else if (strcmp(arg0, "clear") == 0) {
