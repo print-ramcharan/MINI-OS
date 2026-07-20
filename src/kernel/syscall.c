@@ -101,7 +101,25 @@ static int sys_delete(const char *filename) {
   return ramfs_delete(filename);
 }
 
-static int sys_set_priority(uint32_t pid, uint32_t priority) { (void)pid; (void)priority; return -1; }
+extern process_t *ready_queue;
+
+static int sys_set_priority(uint32_t pid, uint32_t priority) {
+  if (priority < MIN_PROCESS_PRIORITY || priority > MAX_PROCESS_PRIORITY) {
+    return -1;
+  }
+  if (!ready_queue) return -1;
+
+  process_t *temp = ready_queue;
+  do {
+    if (temp->pid == pid) {
+      temp->priority = priority;
+      return 0;
+    }
+    temp = temp->next;
+  } while (temp != ready_queue);
+
+  return -1;
+}
 
 void syscall_handler(registers_t *regs) {
   // The syscall number is passed in EAX
