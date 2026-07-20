@@ -29,6 +29,7 @@ typedef struct process {
   uint32_t ebp;          // The base pointer
   uint32_t kernel_stack; // Top of the allocated stack
   uint32_t sleep_ticks;  // Sleep duration remaining in ticks
+  uint32_t priority;     // Process scheduling priority (higher is higher priority)
   open_file_t ofiles[MAX_PROCESS_OPEN_FILES];
 
   struct process *next; // Round-robin links
