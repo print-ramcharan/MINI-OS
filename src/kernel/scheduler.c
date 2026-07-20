@@ -25,6 +25,7 @@ process_t *create_process(void (*entry_point)()) {
   new_proc->pid = next_pid++;
   new_proc->state = PROCESS_READY;
   new_proc->sleep_ticks = 0;
+  new_proc->priority = DEFAULT_PROCESS_PRIORITY;
   for (int i = 0; i < MAX_PROCESS_OPEN_FILES; i++) {
     new_proc->ofiles[i].used = 0;
     new_proc->ofiles[i].filename[0] = '\0';
@@ -77,38 +78,48 @@ process_t *create_process(void (*entry_point)()) {
 }
 
 void schedule(registers_t *regs) {
-  // Only schedule if we have initialized the scheduler and have processes
+  (void)regs;
   if (!scheduler_enabled || !current_process) {
     return;
   }
 
   process_t *prev = current_process;
-  process_t *next = current_process->next;
+  process_t *best = NULL;
+  uint32_t highest_priority = 0;
+  process_t *curr = prev->next;
+  int all_dead = 1;
 
-  // Skip dead/blocked processes
-  while (next->state != PROCESS_READY && next->state != PROCESS_RUNNING) {
-    next = next->next;
-    if (next == prev) {
-      if (prev->state == PROCESS_DEAD) {
-        print("\n[Scheduler] All processes finished. Halting CPU.\n");
-        asm volatile("cli; hlt");
-      }
-      return; // All dead/blocked, but current is not dead (could be sleeping/blocked)
+  do {
+    if (curr->state != PROCESS_DEAD) {
+      all_dead = 0;
     }
+
+    if (curr->state == PROCESS_READY || curr->state == PROCESS_RUNNING) {
+      if (curr->priority > highest_priority) {
+        highest_priority = curr->priority;
+        best = curr;
+      }
+    }
+    curr = curr->next;
+  } while (curr != prev->next);
+
+  if (all_dead) {
+    print("\n[Scheduler] All processes finished. Halting CPU.\n");
+    asm volatile("cli; hlt");
   }
 
-  if (prev == next) {
-    return; // Only 1 process running
+  if (!best || best == prev) {
+    return;
   }
 
   if (prev->state == PROCESS_RUNNING) {
     prev->state = PROCESS_READY;
   }
-  next->state = PROCESS_RUNNING;
-  current_process = next;
+  best->state = PROCESS_RUNNING;
+  current_process = best;
 
   // Perform assembly context switch
-  context_switch(&prev->esp, next->esp);
+  context_switch(&prev->esp, best->esp);
 }
 
 void scheduler_tick(void) {
@@ -134,7 +145,7 @@ void scheduler_print_processes(void) {
     print("No processes running.\n");
     return;
   }
-  print("  PID \t STATE   \t SLEEP_TICKS\n");
+  print("  PID \t STATE   \t PRIORITY \t SLEEP_TICKS\n");
   process_t *temp = ready_queue;
   do {
     print("  ");
@@ -147,6 +158,8 @@ void scheduler_print_processes(void) {
       case PROCESS_DEAD:    print("DEAD    "); break;
     }
     print(" \t ");
+    print_dec(temp->priority);
+    print(" \t\t ");
     print_dec(temp->sleep_ticks);
     print("\n");
     temp = temp->next;

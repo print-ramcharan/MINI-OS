@@ -14,6 +14,7 @@
 #define SYS_WRITE_FILE 8
 #define SYS_CLOSE 9
 #define SYS_DELETE 10
+#define SYS_SET_PRIORITY 11
 
 void syscall_init(void);
 

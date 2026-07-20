@@ -50,6 +50,12 @@ static int shell_delete(const char *filename) {
   return val;
 }
 
+static int shell_set_priority(uint32_t pid, uint32_t priority) {
+  int val;
+  asm volatile("int $0x80" : "=a"(val) : "a"(11), "b"(pid), "c"(priority));
+  return val;
+}
+
 static int atoi(const char *str) {
   int res = 0;
   for (int i = 0; str[i] != '\0'; ++i) {
@@ -137,6 +143,7 @@ void execute_command(const char *cmd) {
     print("  snake                - Play VGA text mode snake game\n");
     print("  ps                   - List active processes\n");
     print("  kill <pid>           - Kill a process by PID\n");
+    print("  nice <pid> <pri>     - Set process scheduling priority (1-20)\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
   } else if (strcmp(arg0, "clear") == 0) {
@@ -160,6 +167,19 @@ void execute_command(const char *cmd) {
         print("Error: Cannot kill the kernel shell.\n");
       } else {
         print("Error: Process "); print_dec(pid); print(" not found.\n");
+      }
+    }
+  } else if (strcmp(arg0, "nice") == 0) {
+    if (arg1[0] == '\0' || arg2[0] == '\0') {
+      print("Usage: nice <pid> <priority>\n");
+    } else {
+      int pid = atoi(arg1);
+      int priority = atoi(arg2);
+      int res = shell_set_priority(pid, priority);
+      if (res == 0) {
+        print("Priority of process "); print_dec(pid); print(" set to "); print_dec(priority); print(".\n");
+      } else {
+        print("Error: Could not set priority. Ensure priority is between 1 and 20.\n");
       }
     }
   } else if (strcmp(arg0, "free") == 0) {

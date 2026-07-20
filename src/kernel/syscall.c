@@ -101,6 +101,26 @@ static int sys_delete(const char *filename) {
   return ramfs_delete(filename);
 }
 
+extern process_t *ready_queue;
+
+static int sys_set_priority(uint32_t pid, uint32_t priority) {
+  if (priority < MIN_PROCESS_PRIORITY || priority > MAX_PROCESS_PRIORITY) {
+    return -1;
+  }
+  if (!ready_queue) return -1;
+
+  process_t *temp = ready_queue;
+  do {
+    if (temp->pid == pid) {
+      temp->priority = priority;
+      return 0;
+    }
+    temp = temp->next;
+  } while (temp != ready_queue);
+
+  return -1;
+}
+
 void syscall_handler(registers_t *regs) {
   // The syscall number is passed in EAX
   // Arguments are passed in EBX, ECX, EDX, ESI, EDI
@@ -137,6 +157,9 @@ void syscall_handler(registers_t *regs) {
     break;
   case SYS_DELETE:
     regs->eax = (uint32_t)sys_delete((const char *)regs->ebx);
+    break;
+  case SYS_SET_PRIORITY:
+    regs->eax = (uint32_t)sys_set_priority((uint32_t)regs->ebx, (uint32_t)regs->ecx);
     break;
   default:
     print("[SYSCALL] Unknown syscall number: ");

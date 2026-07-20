@@ -170,6 +170,7 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
   print("`kfree` -> freeing first chunk... \n");
   kfree(test_ptr_1);
   print("Starting Process Scheduler demonstration...\n");
+  print("[OK] SCHED: Priority-based dynamic scheduler enabled\n");
 
   scheduler_init();
   extern void enable_scheduler();
