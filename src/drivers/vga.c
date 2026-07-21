@@ -116,3 +116,40 @@ void print_dec(uint32_t val) {
   buffer[i] = '\0';
   print(buffer);
 }
+
+static int vga_strcmp(const char *s1, const char *s2) {
+  while (*s1 && (*s1 == *s2)) {
+    s1++;
+    s2++;
+  }
+  return *(const unsigned char *)s1 - *(const unsigned char *)s2;
+}
+
+int vga_set_theme(const char *name) {
+  uint8_t color;
+  if (vga_strcmp(name, "matrix") == 0) {
+    color = vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
+  } else if (vga_strcmp(name, "cyber") == 0) {
+    color = vga_entry_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLUE);
+  } else if (vga_strcmp(name, "amber") == 0) {
+    color = vga_entry_color(VGA_COLOR_LIGHT_BROWN, VGA_COLOR_BLACK);
+  } else if (vga_strcmp(name, "ocean") == 0) {
+    color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLUE);
+  } else if (vga_strcmp(name, "monochrome") == 0) {
+    color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+  } else if (vga_strcmp(name, "default") == 0) {
+    color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+  } else {
+    return -1;
+  }
+
+  terminal_setcolor(color);
+  for (size_t y = 0; y < VGA_HEIGHT; y++) {
+    for (size_t x = 0; x < VGA_WIDTH; x++) {
+      const size_t index = y * VGA_WIDTH + x;
+      char c = (char)(terminal_buffer[index] & 0xFF);
+      terminal_buffer[index] = vga_entry(c, color);
+    }
+  }
+  return 0;
+}
