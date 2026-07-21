@@ -391,6 +391,22 @@ void execute_command(const char *cmd) {
         shell_close(fd);
       }
     }
+  } else if (strcmp(arg0, "calc") == 0) {
+    if (arg1[0] == '\0' || arg2[0] == '\0') {
+      print("Usage: calc <num1> <num2>\n");
+    } else {
+      int a = atoi(arg1);
+      int b = atoi(arg2);
+      print("Arithmetic Operations for "); print_dec(a); print(" and "); print_dec(b); print(":\n");
+      print("  Addition       (a + b) = "); print_dec(a + b); print("\n");
+      print("  Subtraction    (a - b) = "); print_dec(a >= b ? a - b : 0); print("\n");
+      print("  Multiplication (a * b) = "); print_dec(a * b); print("\n");
+      if (b != 0) {
+        print("  Division       (a / b) = "); print_dec(a / b); print("\n");
+      } else {
+        print("  Division       (a / b) = Error (div by 0)\n");
+      }
+    }
   } else if (strcmp(arg0, "about") == 0) {
     print("MINI OS KERNEL v1.1 - Command Shell\n");
   } else if (strcmp(arg0, "exit") == 0) {
