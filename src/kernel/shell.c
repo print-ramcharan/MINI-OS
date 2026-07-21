@@ -8,6 +8,7 @@
 #include "scheduler.h"
 #include "editor.h"
 #include "env.h"
+#include "top.h"
 #include <stdint.h>
 
 static void shell_sleep(uint32_t ticks) {
@@ -342,6 +343,13 @@ void execute_command(const char *cmd) {
   } else if (strcmp(arg0, "snake") == 0) {
     extern void snake_game_task(void);
     process_t *child = create_process(snake_game_task);
+    while (child->state != PROCESS_DEAD) {
+      shell_sleep(5);
+    }
+    terminal_initialize();
+    print("Welcome back to the MINI OS Shell!\n\n");
+  } else if (strcmp(arg0, "top") == 0) {
+    process_t *child = create_process(top_task);
     while (child->state != PROCESS_DEAD) {
       shell_sleep(5);
     }
