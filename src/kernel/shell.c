@@ -167,6 +167,20 @@ void execute_command(const char *cmd) {
         print("Error: Environment variable table full.\n");
       }
     }
+  } else if (strcmp(arg0, "echo") == 0) {
+    if (arg1[0] == '$') {
+      const char *val = env_get(arg1 + 1);
+      if (val) {
+        print(val);
+      }
+    } else {
+      print(arg1);
+      if (arg2[0] != '\0') {
+        print(" ");
+        print(arg2);
+      }
+    }
+    print("\n");
   } else if (strcmp(arg0, "ps") == 0) {
     print("Active kernel tasks:\n");
     scheduler_print_processes();
