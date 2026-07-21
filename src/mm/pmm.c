@@ -76,3 +76,16 @@ uint32_t pmm_get_max_blocks(void) {
 uint32_t pmm_get_used_blocks(void) {
   return pmm_used_blocks;
 }
+
+void pmm_print_map(void) {
+  print("Physical & Virtual Memory Map:\n");
+  print("  0x00000000 - 0x000FFFFF : BIOS & Real Mode IVT (Reserved)\n");
+  print("  0x00100000 - 0x00400000 : Kernel Image & Data (Identity Mapped)\n");
+  print("  0x000B8000 - 0x000B8FA0 : VGA Video Text Buffer\n");
+  print("  0x01000000 - 0x01FFFFFF : Kernel Dynamic Heap Pool\n");
+  print("  PMM Bitmap Pages       : ");
+  print_dec(pmm_used_blocks);
+  print(" / ");
+  print_dec(pmm_max_blocks);
+  print(" pages allocated\n");
+}

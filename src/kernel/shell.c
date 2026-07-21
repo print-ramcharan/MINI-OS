@@ -7,6 +7,8 @@
 #include "ramfs.h"
 #include "scheduler.h"
 #include "editor.h"
+#include "env.h"
+#include "top.h"
 #include <stdint.h>
 
 static void shell_sleep(uint32_t ticks) {
@@ -144,6 +146,15 @@ void execute_command(const char *cmd) {
     print("  ps                   - List active processes\n");
     print("  kill <pid>           - Kill a process by PID\n");
     print("  nice <pid> <pri>     - Set process scheduling priority (1-20)\n");
+    print("  uptime               - Show formatted system uptime\n");
+    print("  top                  - Live system monitor & activity viewer\n");
+    print("  env                  - List environment variables\n");
+    print("  export <K> <V>       - Set an environment variable\n");
+    print("  echo <text|$VAR>     - Print text or variable value\n");
+    print("  theme <name>         - Change VGA color theme\n");
+    print("  stat <file>          - Display file statistics\n");
+    print("  memmap               - Print kernel memory map\n");
+    print("  calc <a> <b>         - Run arithmetic calculator\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
   } else if (strcmp(arg0, "clear") == 0) {
@@ -152,6 +163,58 @@ void execute_command(const char *cmd) {
     print("System uptime: ");
     print_dec(get_tick());
     print(" ticks\n");
+  } else if (strcmp(arg0, "uptime") == 0) {
+    timer_print_uptime();
+  } else if (strcmp(arg0, "env") == 0) {
+    print("Environment Variables:\n");
+    env_list();
+  } else if (strcmp(arg0, "export") == 0) {
+    if (arg1[0] == '\0' || arg2[0] == '\0') {
+      print("Usage: export <KEY> <VALUE>\n");
+    } else {
+      int res = env_set(arg1, arg2);
+      if (res == 0) {
+        print("Variable "); print(arg1); print(" set.\n");
+      } else {
+        print("Error: Environment variable table full.\n");
+      }
+    }
+  } else if (strcmp(arg0, "echo") == 0) {
+    if (arg1[0] == '$') {
+      const char *val = env_get(arg1 + 1);
+      if (val) {
+        print(val);
+      }
+    } else {
+      print(arg1);
+      if (arg2[0] != '\0') {
+        print(" ");
+        print(arg2);
+      }
+    }
+    print("\n");
+  } else if (strcmp(arg0, "theme") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: theme <name>\n");
+      print("Available themes: default, matrix, cyber, amber, ocean, monochrome\n");
+    } else {
+      int res = vga_set_theme(arg1);
+      if (res == 0) {
+        print("Theme applied: "); print(arg1); print("\n");
+      } else {
+        print("Error: Unknown theme '"); print(arg1); print("'\n");
+        print("Available themes: default, matrix, cyber, amber, ocean, monochrome\n");
+      }
+    }
+  } else if (strcmp(arg0, "stat") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: stat <filename>\n");
+    } else {
+      int res = ramfs_stat(arg1);
+      if (res == -1) print("Error: File not found\n");
+    }
+  } else if (strcmp(arg0, "memmap") == 0) {
+    pmm_print_map();
   } else if (strcmp(arg0, "ps") == 0) {
     print("Active kernel tasks:\n");
     scheduler_print_processes();
@@ -294,6 +357,13 @@ void execute_command(const char *cmd) {
     }
     terminal_initialize();
     print("Welcome back to the MINI OS Shell!\n\n");
+  } else if (strcmp(arg0, "top") == 0) {
+    process_t *child = create_process(top_task);
+    while (child->state != PROCESS_DEAD) {
+      shell_sleep(5);
+    }
+    terminal_initialize();
+    print("Welcome back to the MINI OS Shell!\n\n");
   } else if (strcmp(arg0, "write") == 0) {
     if (arg1[0] == '\0' || arg2[0] == '\0') {
       print("Usage: write <filename> <content>\n");
@@ -328,6 +398,22 @@ void execute_command(const char *cmd) {
           print("Error: Could not read file\n");
         }
         shell_close(fd);
+      }
+    }
+  } else if (strcmp(arg0, "calc") == 0) {
+    if (arg1[0] == '\0' || arg2[0] == '\0') {
+      print("Usage: calc <num1> <num2>\n");
+    } else {
+      int a = atoi(arg1);
+      int b = atoi(arg2);
+      print("Arithmetic Operations for "); print_dec(a); print(" and "); print_dec(b); print(":\n");
+      print("  Addition       (a + b) = "); print_dec(a + b); print("\n");
+      print("  Subtraction    (a - b) = "); print_dec(a >= b ? a - b : 0); print("\n");
+      print("  Multiplication (a * b) = "); print_dec(a * b); print("\n");
+      if (b != 0) {
+        print("  Division       (a / b) = "); print_dec(a / b); print("\n");
+      } else {
+        print("  Division       (a / b) = Error (div by 0)\n");
       }
     }
   } else if (strcmp(arg0, "about") == 0) {

@@ -11,6 +11,7 @@
 #include "vga.h"
 #include "shell.h"
 #include "ramfs.h"
+#include "env.h"
 
 // Defined in linker.ld
 extern uint32_t __kernel_start;
@@ -153,7 +154,11 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
 
   ramfs_init();
   print("[OK] VFS: RAM File System initialized\n");
-  print("[OK] VFS: Process-level file descriptor interface loaded\n\n");
+  print("[OK] VFS: Process-level file descriptor interface loaded\n");
+
+  env_init();
+  print("[OK] ENV: Environment variable table initialized\n");
+  print("[OK] SYS: System Utilities Suite & Diagnostics Engine loaded\n\n");
 
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK));
   print("Memory subsystems passed CR3 / Malloc tests!\n");
