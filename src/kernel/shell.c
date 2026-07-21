@@ -146,6 +146,15 @@ void execute_command(const char *cmd) {
     print("  ps                   - List active processes\n");
     print("  kill <pid>           - Kill a process by PID\n");
     print("  nice <pid> <pri>     - Set process scheduling priority (1-20)\n");
+    print("  uptime               - Show formatted system uptime\n");
+    print("  top                  - Live system monitor & activity viewer\n");
+    print("  env                  - List environment variables\n");
+    print("  export <K> <V>       - Set an environment variable\n");
+    print("  echo <text|$VAR>     - Print text or variable value\n");
+    print("  theme <name>         - Change VGA color theme\n");
+    print("  stat <file>          - Display file statistics\n");
+    print("  memmap               - Print kernel memory map\n");
+    print("  calc <a> <b>         - Run arithmetic calculator\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
   } else if (strcmp(arg0, "clear") == 0) {
