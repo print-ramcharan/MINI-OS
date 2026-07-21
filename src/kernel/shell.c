@@ -156,6 +156,17 @@ void execute_command(const char *cmd) {
   } else if (strcmp(arg0, "env") == 0) {
     print("Environment Variables:\n");
     env_list();
+  } else if (strcmp(arg0, "export") == 0) {
+    if (arg1[0] == '\0' || arg2[0] == '\0') {
+      print("Usage: export <KEY> <VALUE>\n");
+    } else {
+      int res = env_set(arg1, arg2);
+      if (res == 0) {
+        print("Variable "); print(arg1); print(" set.\n");
+      } else {
+        print("Error: Environment variable table full.\n");
+      }
+    }
   } else if (strcmp(arg0, "ps") == 0) {
     print("Active kernel tasks:\n");
     scheduler_print_processes();
