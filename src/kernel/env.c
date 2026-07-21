@@ -50,13 +50,19 @@ const char *env_get(const char *key) {
 }
 
 void env_list(void) {
+  int count = 0;
   for (int i = 0; i < MAX_ENV_VARS; i++) {
     if (env_table[i].used) {
+      print("  ");
       print(env_table[i].key);
       print("=");
       print(env_table[i].val);
       print("\n");
+      count++;
     }
+  }
+  if (count == 0) {
+    print("  (no environment variables set)\n");
   }
 }
 
