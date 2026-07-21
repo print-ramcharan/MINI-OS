@@ -24,9 +24,32 @@ static void top_render_header(void) {
   print("--------------------------------------------------------------------------------\n");
 }
 
+static char top_read_char(void) {
+  uint32_t val;
+  asm volatile("mov $5, %%eax; int $0x80; mov %%eax, %0" : "=r"(val) :: "eax");
+  return (char)val;
+}
+
+static void top_sleep(uint32_t ticks) {
+  asm volatile("mov $2, %%eax; mov %0, %%ebx; int $0x80" :: "r"(ticks) : "eax", "ebx");
+}
+
+static void top_exit(void) {
+  asm volatile("mov $3, %%eax; int $0x80" ::: "eax");
+}
+
 void top_task(void) {
   top_render_header();
   scheduler_print_processes();
   print("--------------------------------------------------------------------------------\n");
-  print("Press any key to return to shell...\n");
+  print("Press any key to exit top monitor...\n");
+
+  while (1) {
+    char c = top_read_char();
+    if (c != 0) {
+      break;
+    }
+    top_sleep(5);
+  }
+  top_exit();
 }
