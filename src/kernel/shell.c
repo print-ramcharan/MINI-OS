@@ -153,6 +153,8 @@ void execute_command(const char *cmd) {
     print("System uptime: ");
     print_dec(get_tick());
     print(" ticks\n");
+  } else if (strcmp(arg0, "uptime") == 0) {
+    timer_print_uptime();
   } else if (strcmp(arg0, "env") == 0) {
     print("Environment Variables:\n");
     env_list();
