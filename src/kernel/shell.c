@@ -7,6 +7,7 @@
 #include "ramfs.h"
 #include "scheduler.h"
 #include "editor.h"
+#include "env.h"
 #include <stdint.h>
 
 static void shell_sleep(uint32_t ticks) {
@@ -152,6 +153,9 @@ void execute_command(const char *cmd) {
     print("System uptime: ");
     print_dec(get_tick());
     print(" ticks\n");
+  } else if (strcmp(arg0, "env") == 0) {
+    print("Environment Variables:\n");
+    env_list();
   } else if (strcmp(arg0, "ps") == 0) {
     print("Active kernel tasks:\n");
     scheduler_print_processes();
