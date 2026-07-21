@@ -26,4 +26,7 @@ static void top_render_header(void) {
 
 void top_task(void) {
   top_render_header();
+  scheduler_print_processes();
+  print("--------------------------------------------------------------------------------\n");
+  print("Press any key to return to shell...\n");
 }
