@@ -201,6 +201,8 @@ void execute_command(const char *cmd) {
       int res = ramfs_stat(arg1);
       if (res == -1) print("Error: File not found\n");
     }
+  } else if (strcmp(arg0, "memmap") == 0) {
+    pmm_print_map();
   } else if (strcmp(arg0, "ps") == 0) {
     print("Active kernel tasks:\n");
     scheduler_print_processes();
