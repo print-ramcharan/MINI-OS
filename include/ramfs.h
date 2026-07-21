@@ -30,5 +30,6 @@ void ramfs_list(void);
 int ramfs_delete(const char *name);
 int ramfs_copy(const char *src, const char *dest);
 int ramfs_rename(const char *src, const char *dest);
+int ramfs_stat(const char *name);
 
 #endif

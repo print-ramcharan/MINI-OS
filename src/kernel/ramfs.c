@@ -136,3 +136,18 @@ int ramfs_rename(const char *src, const char *dest) {
   strcpy(files[src_idx].name, dest);
   return 0;
 }
+
+int ramfs_stat(const char *name) {
+  for (int i = 0; i < MAX_FILES; i++) {
+    if (files[i].used && strcmp(files[i].name, name) == 0) {
+      print("File Statistics:\n");
+      print("  Filename:      "); print(files[i].name); print("\n");
+      print("  Size:          "); print_dec(files[i].size); print(" / "); print_dec(MAX_FILE_SIZE); print(" bytes\n");
+      print("  RamFS Slot:    Slot #"); print_dec(i); print("\n");
+      uint32_t pct = (files[i].size * 100) / MAX_FILE_SIZE;
+      print("  Capacity Used: "); print_dec(pct); print("%\n");
+      return 0;
+    }
+  }
+  return -1;
+}
