@@ -44,4 +44,6 @@ void print(const char *str);
 void print_hex(uint32_t val);
 void print_dec(uint32_t val);
 
+int vga_set_theme(const char *name);
+
 #endif
