@@ -37,3 +37,18 @@ void init_timer(uint32_t frequency) {
 }
 
 uint32_t get_tick() { return tick; }
+
+#include "vga.h"
+
+void timer_print_uptime(void) {
+  uint32_t total_sec = tick / 50;
+  uint32_t hours = total_sec / 3600;
+  uint32_t mins = (total_sec % 3600) / 60;
+  uint32_t secs = total_sec % 60;
+
+  print("System Uptime: ");
+  print_dec(hours); print("h ");
+  print_dec(mins); print("m ");
+  print_dec(secs); print("s (");
+  print_dec(tick); print(" ticks)\n");
+}
