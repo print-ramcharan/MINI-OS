@@ -194,6 +194,13 @@ void execute_command(const char *cmd) {
         print("Available themes: default, matrix, cyber, amber, ocean, monochrome\n");
       }
     }
+  } else if (strcmp(arg0, "stat") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: stat <filename>\n");
+    } else {
+      int res = ramfs_stat(arg1);
+      if (res == -1) print("Error: File not found\n");
+    }
   } else if (strcmp(arg0, "ps") == 0) {
     print("Active kernel tasks:\n");
     scheduler_print_processes();
