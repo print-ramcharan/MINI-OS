@@ -181,6 +181,19 @@ void execute_command(const char *cmd) {
       }
     }
     print("\n");
+  } else if (strcmp(arg0, "theme") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: theme <name>\n");
+      print("Available themes: default, matrix, cyber, amber, ocean, monochrome\n");
+    } else {
+      int res = vga_set_theme(arg1);
+      if (res == 0) {
+        print("Theme applied: "); print(arg1); print("\n");
+      } else {
+        print("Error: Unknown theme '"); print(arg1); print("'\n");
+        print("Available themes: default, matrix, cyber, amber, ocean, monochrome\n");
+      }
+    }
   } else if (strcmp(arg0, "ps") == 0) {
     print("Active kernel tasks:\n");
     scheduler_print_processes();
