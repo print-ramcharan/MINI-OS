@@ -23,5 +23,6 @@ void pmm_free_page(uint32_t addr);
 
 uint32_t pmm_get_max_blocks(void);
 uint32_t pmm_get_used_blocks(void);
+void pmm_print_map(void);
 
 #endif
