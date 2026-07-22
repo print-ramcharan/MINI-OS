@@ -123,6 +123,7 @@ void print_hex(uint32_t val) {
 }
 
 void print_dec(uint32_t val) {
+  // Routed via print() to support shell output redirection automatically
   if (val == 0) {
     print("0");
     return;
