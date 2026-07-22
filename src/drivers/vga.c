@@ -1,4 +1,5 @@
 #include "vga.h"
+#include "ramfs.h"
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
@@ -73,7 +74,27 @@ void terminal_writestring(const char *data) {
   terminal_write(data, strlen(data));
 }
 
-void print(const char *str) { terminal_writestring(str); }
+void print(const char *str) {
+  if (redirect_active && redirect_filename[0] != '\0') {
+    char new_content[256];
+    const char *old = ramfs_read(redirect_filename);
+    int len = 0;
+    if (old) {
+      while (old[len] && len < 255) {
+        new_content[len] = old[len];
+        len++;
+      }
+    }
+    int k = 0;
+    while (str[k] && len < 255) {
+      new_content[len++] = str[k++];
+    }
+    new_content[len] = '\0';
+    ramfs_write(redirect_filename, new_content);
+  } else {
+    terminal_writestring(str);
+  }
+}
 
 void print_hex(uint32_t val) {
   print("0x");
