@@ -191,6 +191,10 @@ void execute_command(const char *cmd) {
   char arg2[256];
   parse_args(clean_cmd, arg0, arg1, arg2);
 
+  if (active) {
+    vga_enable_redirect(target_file, append);
+  }
+
   if (strcmp(arg0, "help") == 0) {
     print("Available commands:\n");
     print("  help                 - Show this help message\n");
