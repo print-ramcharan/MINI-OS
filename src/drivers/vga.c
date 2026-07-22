@@ -97,6 +97,7 @@ void print(const char *str) {
 }
 
 void print_hex(uint32_t val) {
+  // Routed via print() to support shell output redirection automatically
   print("0x");
   if (val == 0) {
     print("0");
