@@ -496,6 +496,10 @@ void execute_command(const char *cmd) {
     print(arg0);
     print("\nType 'help' for a list of commands.\n");
   }
+  
+  if (active) {
+    vga_disable_redirect();
+  }
 }
 
 void shell_task(void) {
