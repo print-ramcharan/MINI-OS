@@ -8,6 +8,10 @@ size_t terminal_column;
 uint8_t terminal_color;
 uint16_t *terminal_buffer;
 
+int redirect_active = 0;
+char redirect_filename[32] = "";
+int redirect_append = 0;
+
 void terminal_initialize(void) {
   terminal_row = 0;
   terminal_column = 0;
