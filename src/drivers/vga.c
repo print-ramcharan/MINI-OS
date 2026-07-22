@@ -1,4 +1,5 @@
 #include "vga.h"
+#include "ramfs.h"
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
@@ -7,6 +8,10 @@ size_t terminal_row;
 size_t terminal_column;
 uint8_t terminal_color;
 uint16_t *terminal_buffer;
+
+int redirect_active = 0;
+char redirect_filename[32] = "";
+int redirect_append = 0;
 
 void terminal_initialize(void) {
   terminal_row = 0;
@@ -69,9 +74,30 @@ void terminal_writestring(const char *data) {
   terminal_write(data, strlen(data));
 }
 
-void print(const char *str) { terminal_writestring(str); }
+void print(const char *str) {
+  if (redirect_active && redirect_filename[0] != '\0') {
+    char new_content[256];
+    const char *old = ramfs_read(redirect_filename);
+    int len = 0;
+    if (old) {
+      while (old[len] && len < 255) {
+        new_content[len] = old[len];
+        len++;
+      }
+    }
+    int k = 0;
+    while (str[k] && len < 255) {
+      new_content[len++] = str[k++];
+    }
+    new_content[len] = '\0';
+    ramfs_write(redirect_filename, new_content);
+  } else {
+    terminal_writestring(str);
+  }
+}
 
 void print_hex(uint32_t val) {
+  // Routed via print() to support shell output redirection automatically
   print("0x");
   if (val == 0) {
     print("0");
@@ -98,6 +124,7 @@ void print_hex(uint32_t val) {
 }
 
 void print_dec(uint32_t val) {
+  // Routed via print() to support shell output redirection automatically
   if (val == 0) {
     print("0");
     return;
@@ -152,4 +179,21 @@ int vga_set_theme(const char *name) {
     }
   }
   return 0;
+}
+
+void vga_enable_redirect(const char *filename, int append) {
+  int i = 0;
+  while (filename[i] && i < 31) {
+    redirect_filename[i] = filename[i];
+    i++;
+  }
+  redirect_filename[i] = '\0';
+  redirect_append = append;
+  redirect_active = 1;
+}
+
+void vga_disable_redirect(void) {
+  redirect_active = 0;
+  redirect_filename[0] = '\0';
+  redirect_append = 0;
 }

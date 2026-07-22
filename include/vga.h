@@ -46,4 +46,11 @@ void print_dec(uint32_t val);
 
 int vga_set_theme(const char *name);
 
+extern int redirect_active;
+extern char redirect_filename[32];
+extern int redirect_append;
+
+void vga_enable_redirect(const char *filename, int append);
+void vga_disable_redirect(void);
+
 #endif
