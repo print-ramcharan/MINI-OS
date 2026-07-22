@@ -121,6 +121,64 @@ static void parse_args(const char *cmd, char *arg0, char *arg1, char *arg2) {
 static char cmd_buf[CMD_BUFFER_SIZE];
 static int cmd_len = 0;
 
+static void parse_redirect(const char *cmd, char *clean_cmd, char *target_file, int *append, int *active) {
+  *active = 0;
+  *append = 0;
+  target_file[0] = '\0';
+  
+  int i = 0;
+  int split_idx = -1;
+  int is_double = 0;
+  
+  while (cmd[i]) {
+    if (cmd[i] == '>') {
+      if (cmd[i+1] == '>') {
+        split_idx = i;
+        is_double = 1;
+        break;
+      } else {
+        split_idx = i;
+        is_double = 0;
+        break;
+      }
+    }
+    i++;
+  }
+  
+  if (split_idx != -1) {
+    int k = 0;
+    for (k = 0; k < split_idx; k++) {
+      clean_cmd[k] = cmd[k];
+    }
+    while (k > 0 && clean_cmd[k-1] == ' ') {
+      k--;
+    }
+    clean_cmd[k] = '\0';
+    
+    int f_start = split_idx + (is_double ? 2 : 1);
+    while (cmd[f_start] == ' ') {
+      f_start++;
+    }
+    int f_idx = 0;
+    while (cmd[f_start] && cmd[f_start] != ' ' && f_idx < 31) {
+      target_file[f_idx++] = cmd[f_start++];
+    }
+    target_file[f_idx] = '\0';
+    
+    if (target_file[0] != '\0') {
+      *active = 1;
+      *append = is_double;
+    }
+  } else {
+    int k = 0;
+    while (cmd[k]) {
+      clean_cmd[k] = cmd[k];
+      k++;
+    }
+    clean_cmd[k] = '\0';
+  }
+}
+
 void execute_command(const char *cmd) {
   char arg0[32];
   char arg1[32];
