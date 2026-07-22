@@ -499,6 +499,13 @@ void execute_command(const char *cmd) {
     } else {
       print("  [FAIL] Test 1: Redirect 'help' output failed\n");
     }
+    execute_command("free > test_free.txt");
+    const char *content2 = ramfs_read("test_free.txt");
+    if (content2 && content2[0] != '\0') {
+      print("  [PASS] Test 2: Redirect 'free' memory statistics\n");
+    } else {
+      print("  [FAIL] Test 2: Redirect 'free' failed\n");
+    }
   } else if (strcmp(arg0, "about") == 0) {
     print("MINI OS KERNEL v1.1 - Command Shell\n");
   } else if (strcmp(arg0, "exit") == 0) {
