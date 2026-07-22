@@ -506,6 +506,23 @@ void execute_command(const char *cmd) {
     } else {
       print("  [FAIL] Test 2: Redirect 'free' failed\n");
     }
+    execute_command("uptime > test_log.txt");
+    execute_command("uptime >> test_log.txt");
+    const char *content3 = ramfs_read("test_log.txt");
+    // Verify it appended by looking for multiple 'System Uptime' texts
+    int count = 0;
+    int idx = 0;
+    while (content3 && content3[idx]) {
+      if (content3[idx] == 'U' && content3[idx+1] == 'p') {
+        count++;
+      }
+      idx++;
+    }
+    if (count >= 2) {
+      print("  [PASS] Test 3: Append output redirection ('>>')\n");
+    } else {
+      print("  [FAIL] Test 3: Append output redirection ('>>') failed\n");
+    }
   } else if (strcmp(arg0, "about") == 0) {
     print("MINI OS KERNEL v1.1 - Command Shell\n");
   } else if (strcmp(arg0, "exit") == 0) {
