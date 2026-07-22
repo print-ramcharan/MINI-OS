@@ -180,10 +180,16 @@ static void parse_redirect(const char *cmd, char *clean_cmd, char *target_file, 
 }
 
 void execute_command(const char *cmd) {
+  char clean_cmd[64];
+  char target_file[32];
+  int append = 0;
+  int active = 0;
+  parse_redirect(cmd, clean_cmd, target_file, &append, &active);
+
   char arg0[32];
   char arg1[32];
   char arg2[256];
-  parse_args(cmd, arg0, arg1, arg2);
+  parse_args(clean_cmd, arg0, arg1, arg2);
 
   if (strcmp(arg0, "help") == 0) {
     print("Available commands:\n");
