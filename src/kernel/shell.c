@@ -490,6 +490,15 @@ void execute_command(const char *cmd) {
         print("  Division       (a / b) = Error (div by 0)\n");
       }
     }
+  } else if (strcmp(arg0, "test_redirect") == 0) {
+    print("Running redirection self-tests...\n");
+    execute_command("help > test_help.txt");
+    const char *content1 = ramfs_read("test_help.txt");
+    if (content1 && content1[0] != '\0') {
+      print("  [PASS] Test 1: Redirect 'help' output to file\n");
+    } else {
+      print("  [FAIL] Test 1: Redirect 'help' output failed\n");
+    }
   } else if (strcmp(arg0, "about") == 0) {
     print("MINI OS KERNEL v1.1 - Command Shell\n");
   } else if (strcmp(arg0, "exit") == 0) {
