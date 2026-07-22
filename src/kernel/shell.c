@@ -192,6 +192,12 @@ void execute_command(const char *cmd) {
   parse_args(clean_cmd, arg0, arg1, arg2);
 
   if (active) {
+    if (!append) {
+      ramfs_create(target_file);
+      ramfs_write(target_file, "");
+    } else {
+      ramfs_create(target_file);
+    }
     vga_enable_redirect(target_file, append);
   }
 
