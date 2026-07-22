@@ -180,3 +180,20 @@ int vga_set_theme(const char *name) {
   }
   return 0;
 }
+
+void vga_enable_redirect(const char *filename, int append) {
+  int i = 0;
+  while (filename[i] && i < 31) {
+    redirect_filename[i] = filename[i];
+    i++;
+  }
+  redirect_filename[i] = '\0';
+  redirect_append = append;
+  redirect_active = 1;
+}
+
+void vga_disable_redirect(void) {
+  redirect_active = 0;
+  redirect_filename[0] = '\0';
+  redirect_append = 0;
+}
