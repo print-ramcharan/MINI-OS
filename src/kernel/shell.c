@@ -498,6 +498,15 @@ void execute_command(const char *cmd) {
         shell_close(fd);
       }
     }
+  } else if (strcmp(arg0, "sh") == 0) {
+    if (arg1[0] == '\0') {
+      print("Usage: sh <script_name>\n");
+    } else {
+      int res = shell_run_script(arg1);
+      if (res == -1) {
+        print("Error: Script '"); print(arg1); print("' not found\n");
+      }
+    }
   } else if (strcmp(arg0, "cat") == 0) {
     if (arg1[0] == '\0') {
       print("Usage: cat <filename>\n");
