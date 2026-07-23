@@ -583,6 +583,7 @@ void execute_command(const char *cmd) {
     } else {
       print("  [FAIL] Test 3: Infinite recursion guard failed\n");
     }
+    print("  [VERIFY] Comment and blank line tests finalized.\n");
     // Test 4: Missing script file
     int res4 = shell_run_script("missing.sh");
     if (res4 == -1) {
