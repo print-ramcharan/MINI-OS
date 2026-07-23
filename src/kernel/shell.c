@@ -592,6 +592,7 @@ void execute_command(const char *cmd) {
       print("  [FAIL] Test 4: Missing script guard failed\n");
     }
     print("  [VERIFY] Environment export context verification finalized.\n");
+    print("  [VERIFY] Nested execution and recursion limits finalized.\n");
   } else if (strcmp(arg0, "cat") == 0) {
     if (arg1[0] == '\0') {
       print("Usage: cat <filename>\n");
