@@ -205,6 +205,7 @@ int shell_run_script(const char *filename) {
   if (!content) {
     return -1;
   }
+  print("[sh] Executing script '"); print(filename); print("'...\n");
   script_recursion_depth++;
   
   int offset = 0;
@@ -231,6 +232,7 @@ int shell_run_script(const char *filename) {
   }
   
   script_recursion_depth--;
+  print("[sh] Finished script '"); print(filename); print("'\n");
   return 0;
 }
 
