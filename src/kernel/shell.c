@@ -215,6 +215,13 @@ int shell_run_script(const char *filename) {
       break;
     }
     offset = next_offset;
+    int k = 0;
+    while (line[k] == ' ') {
+      k++;
+    }
+    if (line[k] == '#' || line[k] == '\0') {
+      continue;
+    }
     execute_command(line);
   }
   
