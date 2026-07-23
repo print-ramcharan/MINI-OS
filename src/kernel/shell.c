@@ -179,6 +179,19 @@ static void parse_redirect(const char *cmd, char *clean_cmd, char *target_file, 
   }
 }
 
+static int get_line(const char *buffer, int start, char *line, int max_len) {
+  int i = start;
+  int j = 0;
+  while (buffer[i] && buffer[i] != '\n' && j < max_len - 1) {
+    line[j++] = buffer[i++];
+  }
+  line[j] = '\0';
+  if (buffer[i] == '\n') {
+    i++;
+  }
+  return i;
+}
+
 void execute_command(const char *cmd) {
   char clean_cmd[64];
   char target_file[32];
