@@ -550,6 +550,18 @@ void execute_command(const char *cmd) {
         print("Error: Script '"); print(arg1); print("' not found\n");
       }
     }
+  } else if (strcmp(arg0, "test_script") == 0) {
+    print("Running script runner self-tests...\n");
+    // Test 1: Comments and empty lines
+    ramfs_create("t1.sh");
+    ramfs_write("t1.sh", "\n# Comment line\nexport TESTVAR hello_test\n\n  # Spaces and comment\n");
+    shell_run_script("t1.sh");
+    const char *val = env_get("TESTVAR");
+    if (val && strcmp(val, "hello_test") == 0) {
+      print("  [PASS] Test 1: Comments and empty lines ignored correctly\n");
+    } else {
+      print("  [FAIL] Test 1: Comments and empty lines failed\n");
+    }
   } else if (strcmp(arg0, "cat") == 0) {
     if (arg1[0] == '\0') {
       print("Usage: cat <filename>\n");
