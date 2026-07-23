@@ -562,6 +562,18 @@ void execute_command(const char *cmd) {
     } else {
       print("  [FAIL] Test 1: Comments and empty lines failed\n");
     }
+    // Test 2: Nested script execution
+    ramfs_create("t2_a.sh");
+    ramfs_write("t2_a.sh", "sh t2_b.sh\n");
+    ramfs_create("t2_b.sh");
+    ramfs_write("t2_b.sh", "export NESTVAR nested_success\n");
+    shell_run_script("t2_a.sh");
+    const char *val2 = env_get("NESTVAR");
+    if (val2 && strcmp(val2, "nested_success") == 0) {
+      print("  [PASS] Test 2: Nested script executed successfully\n");
+    } else {
+      print("  [FAIL] Test 2: Nested script failed\n");
+    }
   } else if (strcmp(arg0, "cat") == 0) {
     if (arg1[0] == '\0') {
       print("Usage: cat <filename>\n");
