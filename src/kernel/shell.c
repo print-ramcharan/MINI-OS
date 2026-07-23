@@ -588,6 +588,11 @@ void execute_command(const char *cmd) {
 void shell_task(void) {
   print("Welcome to the MINI OS Shell!\n");
   print("Type 'help' to see available commands.\n\n");
+
+  print("Executing /init.sh...\n");
+  shell_run_script("init.sh");
+  print("Startup sequence complete.\n\n");
+
   print("minios> ");
 
   cmd_len = 0;
