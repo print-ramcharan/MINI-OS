@@ -234,6 +234,31 @@ int shell_run_script(const char *filename) {
   return 0;
 }
 
+static void resolve_env_vars(const char *input, char *output, int max_len) {
+  int i = 0, j = 0;
+  while (input[i] && j < max_len - 1) {
+    if (input[i] == '$') {
+      i++;
+      char var_name[32];
+      int vn_idx = 0;
+      while (input[i] && input[i] != ' ' && input[i] != '/' && input[i] != '.' && vn_idx < 31) {
+        var_name[vn_idx++] = input[i++];
+      }
+      var_name[vn_idx] = '\0';
+      const char *val = env_get(var_name);
+      if (val) {
+        int v_idx = 0;
+        while (val[v_idx] && j < max_len - 1) {
+          output[j++] = val[v_idx++];
+        }
+      }
+    } else {
+      output[j++] = input[i++];
+    }
+  }
+  output[j] = '\0';
+}
+
 void execute_command(const char *cmd) {
   char clean_cmd[64];
   char target_file[32];
@@ -241,10 +266,13 @@ void execute_command(const char *cmd) {
   int active = 0;
   parse_redirect(cmd, clean_cmd, target_file, &append, &active);
 
+  char resolved_cmd[64];
+  resolve_env_vars(clean_cmd, resolved_cmd, 64);
+
   char arg0[32];
   char arg1[32];
   char arg2[256];
-  parse_args(clean_cmd, arg0, arg1, arg2);
+  parse_args(resolved_cmd, arg0, arg1, arg2);
 
   if (active) {
     if (!append) {
