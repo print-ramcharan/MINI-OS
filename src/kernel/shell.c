@@ -11,6 +11,8 @@
 #include "top.h"
 #include <stdint.h>
 
+void execute_command(const char *cmd);
+
 static void shell_sleep(uint32_t ticks) {
   asm volatile("mov $2, %%eax; mov %0, %%ebx; int $0x80"
                :
@@ -190,6 +192,34 @@ static int get_line(const char *buffer, int start, char *line, int max_len) {
     i++;
   }
   return i;
+}
+
+static int script_recursion_depth = 0;
+
+int shell_run_script(const char *filename) {
+  if (script_recursion_depth >= MAX_SCRIPT_RECURSION) {
+    print("Error: Max script recursion depth reached\n");
+    return -2;
+  }
+  const char *content = ramfs_read(filename);
+  if (!content) {
+    return -1;
+  }
+  script_recursion_depth++;
+  
+  int offset = 0;
+  char line[MAX_SCRIPT_LINE_LEN];
+  while (content[offset]) {
+    int next_offset = get_line(content, offset, line, MAX_SCRIPT_LINE_LEN);
+    if (next_offset == offset) {
+      break;
+    }
+    offset = next_offset;
+    execute_command(line);
+  }
+  
+  script_recursion_depth--;
+  return 0;
 }
 
 void execute_command(const char *cmd) {
