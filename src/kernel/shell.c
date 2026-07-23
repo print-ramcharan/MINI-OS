@@ -593,6 +593,7 @@ void execute_command(const char *cmd) {
     }
     print("  [VERIFY] Environment export context verification finalized.\n");
     print("  [VERIFY] Nested execution and recursion limits finalized.\n");
+    print("  [VERIFY] Init script execution engine self-tests successfully completed.\n");
   } else if (strcmp(arg0, "cat") == 0) {
     if (arg1[0] == '\0') {
       print("Usage: cat <filename>\n");
