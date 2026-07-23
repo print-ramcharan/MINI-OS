@@ -23,6 +23,8 @@ void ramfs_init(void) {
     files[i].content[0] = '\0';
     files[i].size = 0;
   }
+  ramfs_create("init.sh");
+  ramfs_write("init.sh", "# MINI-OS Startup script\nexport OSNAME MINI-OS-PRO\ntheme matrix\n");
 }
 
 int ramfs_create(const char *name) {
