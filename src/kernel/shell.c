@@ -272,6 +272,7 @@ void execute_command(const char *cmd) {
     print("  stat <file>          - Display file statistics\n");
     print("  memmap               - Print kernel memory map\n");
     print("  calc <a> <b>         - Run arithmetic calculator\n");
+    print("  sh <file>            - Run shell script file\n");
     print("  test_redirect        - Run shell output redirection self-tests\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
