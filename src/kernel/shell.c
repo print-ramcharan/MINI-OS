@@ -215,6 +215,11 @@ int shell_run_script(const char *filename) {
       break;
     }
     offset = next_offset;
+    int len = 0;
+    while (line[len]) len++;
+    if (len > 0 && line[len - 1] == '\r') {
+      line[len - 1] = '\0';
+    }
     int k = 0;
     while (line[k] == ' ') {
       k++;
