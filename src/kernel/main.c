@@ -159,7 +159,8 @@ void kernel_main(struct multiboot_info *mbd, uint32_t magic) {
   env_init();
   print("[OK] ENV: Environment variable table initialized\n");
   print("[OK] SYS: System Utilities Suite & Diagnostics Engine loaded\n");
-  print("[OK] SH: Output Redirection Engine (> and >>) integrated\n\n");
+  print("[OK] SH: Output Redirection Engine (> and >>) integrated\n");
+  print("[OK] SH: System Init Script & Interpreted Config Engine loaded\n\n");
 
   terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK));
   print("Memory subsystems passed CR3 / Malloc tests!\n");
