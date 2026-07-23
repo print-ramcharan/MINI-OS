@@ -153,6 +153,7 @@ static int vga_strcmp(const char *s1, const char *s2) {
 }
 
 int vga_set_theme(const char *name) {
+  // Supported for initialization during boot time via /init.sh script execution
   uint8_t color;
   if (vga_strcmp(name, "matrix") == 0) {
     color = vga_entry_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
