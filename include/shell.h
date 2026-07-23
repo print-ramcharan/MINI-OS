@@ -5,5 +5,6 @@
 #define MAX_SCRIPT_RECURSION 4
 
 void shell_task(void);
+int shell_run_script(const char *filename);
 
 #endif
