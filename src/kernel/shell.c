@@ -574,6 +574,15 @@ void execute_command(const char *cmd) {
     } else {
       print("  [FAIL] Test 2: Nested script failed\n");
     }
+    // Test 3: Recursion depth limit
+    ramfs_create("t3.sh");
+    ramfs_write("t3.sh", "sh t3.sh\n");
+    int res3 = shell_run_script("t3.sh");
+    if (res3 == -2) {
+      print("  [PASS] Test 3: Infinite recursion prevented cleanly\n");
+    } else {
+      print("  [FAIL] Test 3: Infinite recursion guard failed\n");
+    }
   } else if (strcmp(arg0, "cat") == 0) {
     if (arg1[0] == '\0') {
       print("Usage: cat <filename>\n");
