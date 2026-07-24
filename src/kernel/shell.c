@@ -13,6 +13,10 @@
 
 void execute_command(const char *cmd);
 
+static char history[MAX_HISTORY][64];
+static int history_count = 0;
+static int history_write_idx = 0;
+
 static void shell_sleep(uint32_t ticks) {
   asm volatile("mov $2, %%eax; mov %0, %%ebx; int $0x80"
                :
