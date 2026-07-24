@@ -16,8 +16,10 @@ void execute_command(const char *cmd);
 static char history[MAX_HISTORY][64];
 static int history_count = 0;
 static int history_write_idx = 0;
+static int history_recall_idx = -1;
 
 void history_push(const char *cmd) {
+  history_recall_idx = -1;
   if (!cmd || cmd[0] == '\0') return;
   if (history_count > 0) {
     int last_idx = (history_write_idx - 1 + MAX_HISTORY) % MAX_HISTORY;
