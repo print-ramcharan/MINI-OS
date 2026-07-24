@@ -764,6 +764,29 @@ static void clear_current_line(void) {
   }
 }
 
+void shell_tab_complete(void) {
+  if (cmd_len == 0) return;
+  int match_count = 0;
+  const char *matched_cmd = 0;
+  for (size_t i = 0; i < CMD_DICT_SIZE; i++) {
+    if (starts_with(cmd_buf, cmd_dictionary[i])) {
+      match_count++;
+      matched_cmd = cmd_dictionary[i];
+    }
+  }
+  if (match_count == 1) {
+    clear_current_line();
+    cmd_len = 0;
+    while (matched_cmd[cmd_len] && cmd_len < CMD_BUFFER_SIZE - 2) {
+      cmd_buf[cmd_len] = matched_cmd[cmd_len];
+      cmd_len++;
+    }
+    cmd_buf[cmd_len++] = ' ';
+    cmd_buf[cmd_len] = '\0';
+    print(cmd_buf);
+  }
+}
+
 void shell_task(void) {
   print("Welcome to the MINI OS Shell!\n");
   print("Type 'help' to see available commands.\n\n");
