@@ -726,6 +726,13 @@ void execute_command(const char *cmd) {
   }
 }
 
+static void clear_current_line(void) {
+  while (cmd_len > 0) {
+    print("\b");
+    cmd_len--;
+  }
+}
+
 void shell_task(void) {
   print("Welcome to the MINI OS Shell!\n");
   print("Type 'help' to see available commands.\n\n");
