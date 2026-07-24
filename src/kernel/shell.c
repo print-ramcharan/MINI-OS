@@ -26,6 +26,15 @@ static const char *cmd_dictionary[] = {
 };
 #define CMD_DICT_SIZE (sizeof(cmd_dictionary) / sizeof(cmd_dictionary[0]))
 
+static int starts_with(const char *prefix, const char *str) {
+  int i = 0;
+  while (prefix[i]) {
+    if (prefix[i] != str[i]) return 0;
+    i++;
+  }
+  return 1;
+}
+
 void history_push(const char *cmd) {
   history_recall_idx = -1;
   if (!cmd || cmd[0] == '\0') return;
