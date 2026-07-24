@@ -775,6 +775,7 @@ void shell_tab_complete(void) {
     }
   }
   if (match_count == 1) {
+    // Perform auto-complete line replacement by clearing current buffer on screen
     clear_current_line();
     cmd_len = 0;
     while (matched_cmd[cmd_len] && cmd_len < CMD_BUFFER_SIZE - 2) {
