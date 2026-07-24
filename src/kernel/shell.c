@@ -383,6 +383,9 @@ void execute_command(const char *cmd) {
     print("  test_redirect        - Run shell output redirection self-tests\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
+    print("\nShortcuts:\n");
+    print("  * Press [Tab] to trigger command or filename auto-completion\n");
+    print("  * Press [Up/Down] arrows to scroll shell command history\n");
   } else if (strcmp(arg0, "clear") == 0) {
     terminal_initialize();
   } else if (strcmp(arg0, "ticks") == 0) {
@@ -793,7 +796,50 @@ void shell_tab_complete(void) {
     char cmd[32];
     char file_prefix[32];
     get_filename_prefix(cmd_buf, cmd, file_prefix);
-    return; // Will be completed in Commit 26
+    
+    extern const char *ramfs_get_filename(int index);
+    int match_count = 0;
+    const char *matched_file = 0;
+    for (int i = 0; i < MAX_FILES; i++) {
+      const char *fname = ramfs_get_filename(i);
+      if (fname) {
+        if (starts_with(file_prefix, fname)) {
+          match_count++;
+          matched_file = fname;
+        }
+      }
+    }
+    
+    if (match_count == 1) {
+      clear_current_line();
+      int len = 0;
+      while (cmd[len]) {
+        cmd_buf[len] = cmd[len];
+        len++;
+      }
+      cmd_buf[len++] = ' ';
+      int f_len = 0;
+      while (matched_file[f_len] && len < CMD_BUFFER_SIZE - 1) {
+        cmd_buf[len++] = matched_file[f_len++];
+      }
+      cmd_buf[len] = '\0';
+      cmd_len = len;
+      print(cmd_buf);
+    } else if (match_count > 1) {
+      print("\n");
+      for (int i = 0; i < MAX_FILES; i++) {
+        const char *fname = ramfs_get_filename(i);
+        if (fname) {
+          if (starts_with(file_prefix, fname)) {
+            print(fname);
+            print("  ");
+          }
+        }
+      }
+      print("\nminios> ");
+      print(cmd_buf);
+    }
+    return;
   }
 
   int match_count = 0;
