@@ -17,6 +17,47 @@ static char history[MAX_HISTORY][64];
 static int history_count = 0;
 static int history_write_idx = 0;
 
+void history_push(const char *cmd) {
+  if (!cmd || cmd[0] == '\0') return;
+  if (history_count > 0) {
+    int last_idx = (history_write_idx - 1 + MAX_HISTORY) % MAX_HISTORY;
+    int matches = 1;
+    for (int i = 0; cmd[i] || history[last_idx][i]; i++) {
+      if (cmd[i] != history[last_idx][i]) {
+        matches = 0;
+        break;
+      }
+    }
+    if (matches) return;
+  }
+  int i = 0;
+  while (cmd[i] && i < 63) {
+    history[history_write_idx][i] = cmd[i];
+    i++;
+  }
+  history[history_write_idx][i] = '\0';
+  history_write_idx = (history_write_idx + 1) % MAX_HISTORY;
+  if (history_count < MAX_HISTORY) {
+    history_count++;
+  }
+}
+
+void history_print(void) {
+  if (history_count == 0) {
+    print("No history recorded.\n");
+    return;
+  }
+  int start_idx = (history_write_idx - history_count + MAX_HISTORY) % MAX_HISTORY;
+  for (int i = 0; i < history_count; i++) {
+    int idx = (start_idx + i) % MAX_HISTORY;
+    print("  ");
+    print_dec(i + 1);
+    print(": ");
+    print(history[idx]);
+    print("\n");
+  }
+}
+
 static void shell_sleep(uint32_t ticks) {
   asm volatile("mov $2, %%eax; mov %0, %%ebx; int $0x80"
                :
