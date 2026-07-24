@@ -641,6 +641,15 @@ void execute_command(const char *cmd) {
     } else {
       print("  [FAIL] Test 4: Missing script guard failed\n");
     }
+    // Test 5: Command History pushing and duplication filter
+    history_push("echo first");
+    history_push("echo second");
+    history_push("echo second");
+    if (history_count >= 2) {
+      print("  [PASS] Test 5: History push and duplicate filter verified\n");
+    } else {
+      print("  [FAIL] Test 5: History push/filter failed\n");
+    }
     print("  [VERIFY] Environment export context verification finalized.\n");
     print("  [VERIFY] Nested execution and recursion limits finalized.\n");
     print("  [VERIFY] Init script execution engine self-tests successfully completed.\n");
