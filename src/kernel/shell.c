@@ -785,6 +785,16 @@ void shell_tab_complete(void) {
     cmd_buf[cmd_len++] = ' ';
     cmd_buf[cmd_len] = '\0';
     print(cmd_buf);
+  } else if (match_count > 1) {
+    print("\n");
+    for (size_t i = 0; i < CMD_DICT_SIZE; i++) {
+      if (starts_with(cmd_buf, cmd_dictionary[i])) {
+        print(cmd_dictionary[i]);
+        print("  ");
+      }
+    }
+    print("\nminios> ");
+    print(cmd_buf);
   }
 }
 
