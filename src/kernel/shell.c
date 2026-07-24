@@ -744,6 +744,7 @@ void shell_task(void) {
       if (c == '\n') {
         print("\n");
         cmd_buf[cmd_len] = '\0';
+        history_push(cmd_buf);
         execute_command(cmd_buf);
         cmd_len = 0;
         print("minios> ");
