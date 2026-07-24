@@ -18,6 +18,14 @@ static int history_count = 0;
 static int history_write_idx = 0;
 static int history_recall_idx = -1;
 
+static const char *cmd_dictionary[] = {
+  "help", "clear", "ticks", "free", "cpuinfo", "ls", "touch", "write",
+  "cat", "rm", "cp", "mv", "edit", "snake", "ps", "kill", "nice",
+  "uptime", "top", "env", "export", "echo", "theme", "stat", "memmap",
+  "calc", "sh", "history", "test_redirect", "test_script", "about", "exit"
+};
+#define CMD_DICT_SIZE (sizeof(cmd_dictionary) / sizeof(cmd_dictionary[0]))
+
 void history_push(const char *cmd) {
   history_recall_idx = -1;
   if (!cmd || cmd[0] == '\0') return;
