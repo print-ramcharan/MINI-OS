@@ -757,6 +757,25 @@ void shell_task(void) {
         execute_command(cmd_buf);
         cmd_len = 0;
         print("minios> ");
+      } else if (c == 17) {
+        if (history_count > 0) {
+          if (history_recall_idx == -1) {
+            history_recall_idx = history_count - 1;
+          } else if (history_recall_idx > 0) {
+            history_recall_idx--;
+          }
+          clear_current_line();
+          int start_idx = (history_write_idx - history_count + MAX_HISTORY) % MAX_HISTORY;
+          int target = (start_idx + history_recall_idx) % MAX_HISTORY;
+          const char *h_cmd = history[target];
+          cmd_len = 0;
+          while (h_cmd[cmd_len] && cmd_len < CMD_BUFFER_SIZE - 1) {
+            cmd_buf[cmd_len] = h_cmd[cmd_len];
+            cmd_len++;
+          }
+          cmd_buf[cmd_len] = '\0';
+          print(cmd_buf);
+        }
       } else if (c == '\b') {
         if (cmd_len > 0) {
           cmd_len--;
