@@ -780,6 +780,22 @@ static void get_filename_prefix(const char *buffer, char *cmd, char *file_prefix
 }
 void shell_tab_complete(void) {
   if (cmd_len == 0) return;
+  
+  int has_space = 0;
+  for (int i = 0; cmd_buf[i]; i++) {
+    if (cmd_buf[i] == ' ') {
+      has_space = 1;
+      break;
+    }
+  }
+  
+  if (has_space) {
+    char cmd[32];
+    char file_prefix[32];
+    get_filename_prefix(cmd_buf, cmd, file_prefix);
+    return; // Will be completed in Commit 26
+  }
+
   int match_count = 0;
   const char *matched_cmd = 0;
   for (size_t i = 0; i < CMD_DICT_SIZE; i++) {
