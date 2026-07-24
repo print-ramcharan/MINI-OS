@@ -48,7 +48,9 @@ static void keyboard_callback(registers_t *regs) {
     // key press
     char c = kbdus[scancode];
     if (c != 0) {
-      terminal_putchar(c);
+      if (c >= 32 || c == '\n' || c == '\b') {
+        terminal_putchar(c);
+      }
       keyboard_buffer_push(c);
     }
   }
