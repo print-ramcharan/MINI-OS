@@ -153,3 +153,12 @@ int ramfs_stat(const char *name) {
   }
   return -1;
 }
+
+const char *ramfs_get_filename(int index) {
+  if (index >= 0 && index < MAX_FILES) {
+    if (files[index].used) {
+      return files[index].name;
+    }
+  }
+  return 0;
+}
