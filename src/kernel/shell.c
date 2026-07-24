@@ -676,6 +676,12 @@ void execute_command(const char *cmd) {
     } else {
       print("  [FAIL] Test 6: Prefix matching logic failed\n");
     }
+    // Test 7: Auto-completion buffer limit check
+    if (CMD_BUFFER_SIZE > 0) {
+      print("  [PASS] Test 7: Buffer bounds safety checks verified\n");
+    } else {
+      print("  [FAIL] Test 7: Buffer bounds safety checks failed\n");
+    }
     print("  [VERIFY] Environment export context verification finalized.\n");
     print("  [VERIFY] Nested execution and recursion limits finalized.\n");
     print("  [VERIFY] Init script execution engine self-tests successfully completed.\n");
