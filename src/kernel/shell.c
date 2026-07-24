@@ -860,6 +860,9 @@ void shell_task(void) {
             cmd_buf[0] = '\0';
           }
         }
+      } else if (c == '\t') {
+        cmd_buf[cmd_len] = '\0';
+        shell_tab_complete();
       } else if (c == '\b') {
         if (cmd_len > 0) {
           cmd_len--;
