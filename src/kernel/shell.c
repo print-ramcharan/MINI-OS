@@ -597,6 +597,8 @@ void execute_command(const char *cmd) {
         print("Error: Script '"); print(arg1); print("' not found\n");
       }
     }
+  } else if (strcmp(arg0, "history") == 0) {
+    history_print();
   } else if (strcmp(arg0, "test_script") == 0) {
     print("Running script runner self-tests...\n");
     // Test 1: Comments and empty lines
