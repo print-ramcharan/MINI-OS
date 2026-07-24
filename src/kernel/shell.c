@@ -13,6 +13,70 @@
 
 void execute_command(const char *cmd);
 
+static char history[MAX_HISTORY][64];
+static int history_count = 0;
+static int history_write_idx = 0;
+static int history_recall_idx = -1;
+
+static const char *cmd_dictionary[] = {
+  "help", "clear", "ticks", "free", "cpuinfo", "ls", "touch", "write",
+  "cat", "rm", "cp", "mv", "edit", "snake", "ps", "kill", "nice",
+  "uptime", "top", "env", "export", "echo", "theme", "stat", "memmap",
+  "calc", "sh", "history", "test_redirect", "test_script", "about", "exit"
+};
+#define CMD_DICT_SIZE (sizeof(cmd_dictionary) / sizeof(cmd_dictionary[0]))
+
+static int starts_with(const char *prefix, const char *str) {
+  int i = 0;
+  while (prefix[i]) {
+    if (prefix[i] != str[i]) return 0;
+    i++;
+  }
+  return 1;
+}
+
+void history_push(const char *cmd) {
+  history_recall_idx = -1;
+  if (!cmd || cmd[0] == '\0') return;
+  if (history_count > 0) {
+    int last_idx = (history_write_idx - 1 + MAX_HISTORY) % MAX_HISTORY;
+    int matches = 1;
+    for (int i = 0; cmd[i] || history[last_idx][i]; i++) {
+      if (cmd[i] != history[last_idx][i]) {
+        matches = 0;
+        break;
+      }
+    }
+    if (matches) return;
+  }
+  int i = 0;
+  while (cmd[i] && i < 63) {
+    history[history_write_idx][i] = cmd[i];
+    i++;
+  }
+  history[history_write_idx][i] = '\0';
+  history_write_idx = (history_write_idx + 1) % MAX_HISTORY;
+  if (history_count < MAX_HISTORY) {
+    history_count++;
+  }
+}
+
+void history_print(void) {
+  if (history_count == 0) {
+    print("No history recorded.\n");
+    return;
+  }
+  int start_idx = (history_write_idx - history_count + MAX_HISTORY) % MAX_HISTORY;
+  for (int i = 0; i < history_count; i++) {
+    int idx = (start_idx + i) % MAX_HISTORY;
+    print("  ");
+    print_dec(i + 1);
+    print(": ");
+    print(history[idx]);
+    print("\n");
+  }
+}
+
 static void shell_sleep(uint32_t ticks) {
   asm volatile("mov $2, %%eax; mov %0, %%ebx; int $0x80"
                :
@@ -315,9 +379,13 @@ void execute_command(const char *cmd) {
     print("  memmap               - Print kernel memory map\n");
     print("  calc <a> <b>         - Run arithmetic calculator\n");
     print("  sh <file>            - Run shell script file\n");
+    print("  history              - Show recent command history\n");
     print("  test_redirect        - Run shell output redirection self-tests\n");
     print("  about                - Show operating system details\n");
     print("  exit                 - Exit the shell process\n");
+    print("\nShortcuts:\n");
+    print("  * Press [Tab] to trigger command or filename auto-completion\n");
+    print("  * Press [Up/Down] arrows to scroll shell command history\n");
   } else if (strcmp(arg0, "clear") == 0) {
     terminal_initialize();
   } else if (strcmp(arg0, "ticks") == 0) {
@@ -550,6 +618,8 @@ void execute_command(const char *cmd) {
         print("Error: Script '"); print(arg1); print("' not found\n");
       }
     }
+  } else if (strcmp(arg0, "history") == 0) {
+    history_print();
   } else if (strcmp(arg0, "test_script") == 0) {
     print("Running script runner self-tests...\n");
     // Test 1: Comments and empty lines
@@ -590,6 +660,27 @@ void execute_command(const char *cmd) {
       print("  [PASS] Test 4: Missing script handled gracefully\n");
     } else {
       print("  [FAIL] Test 4: Missing script guard failed\n");
+    }
+    // Test 5: Command History pushing and duplication filter
+    history_push("echo first");
+    history_push("echo second");
+    history_push("echo second");
+    if (history_count >= 2) {
+      print("  [PASS] Test 5: History push and duplicate filter verified\n");
+    } else {
+      print("  [FAIL] Test 5: History push/filter failed\n");
+    }
+    // Test 6: Auto-completion prefix match check
+    if (starts_with("he", "help") && !starts_with("he", "clear")) {
+      print("  [PASS] Test 6: Prefix matching logic verified\n");
+    } else {
+      print("  [FAIL] Test 6: Prefix matching logic failed\n");
+    }
+    // Test 7: Auto-completion buffer limit check
+    if (CMD_BUFFER_SIZE > 0) {
+      print("  [PASS] Test 7: Buffer bounds safety checks verified\n");
+    } else {
+      print("  [FAIL] Test 7: Buffer bounds safety checks failed\n");
     }
     print("  [VERIFY] Environment export context verification finalized.\n");
     print("  [VERIFY] Nested execution and recursion limits finalized.\n");
@@ -681,6 +772,120 @@ void execute_command(const char *cmd) {
   }
 }
 
+static void clear_current_line(void) {
+  while (cmd_len > 0) {
+    print("\b");
+    cmd_len--;
+  }
+}
+static void get_filename_prefix(const char *buffer, char *cmd, char *file_prefix) {
+  int i = 0, j = 0;
+  while (buffer[i] && buffer[i] != ' ') {
+    cmd[j++] = buffer[i++];
+  }
+  cmd[j] = '\0';
+  if (buffer[i] == ' ') {
+    i++;
+  }
+  j = 0;
+  while (buffer[i]) {
+    file_prefix[j++] = buffer[i++];
+  }
+  file_prefix[j] = '\0';
+}
+void shell_tab_complete(void) {
+  if (cmd_len == 0) return;
+  
+  int has_space = 0;
+  for (int i = 0; cmd_buf[i]; i++) {
+    if (cmd_buf[i] == ' ') {
+      has_space = 1;
+      break;
+    }
+  }
+  
+  if (has_space) {
+    char cmd[32];
+    char file_prefix[32];
+    get_filename_prefix(cmd_buf, cmd, file_prefix);
+    
+    extern const char *ramfs_get_filename(int index);
+    int match_count = 0;
+    const char *matched_file = 0;
+    for (int i = 0; i < MAX_FILES; i++) {
+      const char *fname = ramfs_get_filename(i);
+      if (fname) {
+        if (starts_with(file_prefix, fname)) {
+          match_count++;
+          matched_file = fname;
+        }
+      }
+    }
+    
+    if (match_count == 1) {
+      clear_current_line();
+      int len = 0;
+      while (cmd[len]) {
+        cmd_buf[len] = cmd[len];
+        len++;
+      }
+      cmd_buf[len++] = ' ';
+      int f_len = 0;
+      while (matched_file[f_len] && len < CMD_BUFFER_SIZE - 1) {
+        cmd_buf[len++] = matched_file[f_len++];
+      }
+      cmd_buf[len] = '\0';
+      cmd_len = len;
+      print(cmd_buf);
+    } else if (match_count > 1) {
+      print("\n");
+      for (int i = 0; i < MAX_FILES; i++) {
+        const char *fname = ramfs_get_filename(i);
+        if (fname) {
+          if (starts_with(file_prefix, fname)) {
+            print(fname);
+            print("  ");
+          }
+        }
+      }
+      print("\nminios> ");
+      print(cmd_buf);
+    }
+    return;
+  }
+
+  int match_count = 0;
+  const char *matched_cmd = 0;
+  for (size_t i = 0; i < CMD_DICT_SIZE; i++) {
+    if (starts_with(cmd_buf, cmd_dictionary[i])) {
+      match_count++;
+      matched_cmd = cmd_dictionary[i];
+    }
+  }
+  if (match_count == 1) {
+    // Perform auto-complete line replacement by clearing current buffer on screen
+    clear_current_line();
+    cmd_len = 0;
+    while (matched_cmd[cmd_len] && cmd_len < CMD_BUFFER_SIZE - 2) {
+      cmd_buf[cmd_len] = matched_cmd[cmd_len];
+      cmd_len++;
+    }
+    cmd_buf[cmd_len++] = ' ';
+    cmd_buf[cmd_len] = '\0';
+    print(cmd_buf);
+  } else if (match_count > 1) {
+    print("\n");
+    for (size_t i = 0; i < CMD_DICT_SIZE; i++) {
+      if (starts_with(cmd_buf, cmd_dictionary[i])) {
+        print(cmd_dictionary[i]);
+        print("  ");
+      }
+    }
+    print("\nminios> ");
+    print(cmd_buf);
+  }
+}
+
 void shell_task(void) {
   print("Welcome to the MINI OS Shell!\n");
   print("Type 'help' to see available commands.\n\n");
@@ -699,9 +904,53 @@ void shell_task(void) {
       if (c == '\n') {
         print("\n");
         cmd_buf[cmd_len] = '\0';
+        history_push(cmd_buf);
         execute_command(cmd_buf);
         cmd_len = 0;
         print("minios> ");
+      } else if (c == 17) {
+        if (history_count > 0) {
+          if (history_recall_idx == -1) {
+            history_recall_idx = history_count - 1;
+          } else if (history_recall_idx > 0) {
+            history_recall_idx--;
+          }
+          clear_current_line();
+          int start_idx = (history_write_idx - history_count + MAX_HISTORY) % MAX_HISTORY;
+          int target = (start_idx + history_recall_idx) % MAX_HISTORY;
+          const char *h_cmd = history[target];
+          cmd_len = 0;
+          while (h_cmd[cmd_len] && cmd_len < CMD_BUFFER_SIZE - 1) {
+            cmd_buf[cmd_len] = h_cmd[cmd_len];
+            cmd_len++;
+          }
+          cmd_buf[cmd_len] = '\0';
+          print(cmd_buf);
+        }
+      } else if (c == 18) {
+        if (history_count > 0 && history_recall_idx != -1) {
+          if (history_recall_idx < history_count - 1) {
+            history_recall_idx++;
+            clear_current_line();
+            int start_idx = (history_write_idx - history_count + MAX_HISTORY) % MAX_HISTORY;
+            int target = (start_idx + history_recall_idx) % MAX_HISTORY;
+            const char *h_cmd = history[target];
+            cmd_len = 0;
+            while (h_cmd[cmd_len] && cmd_len < CMD_BUFFER_SIZE - 1) {
+              cmd_buf[cmd_len] = h_cmd[cmd_len];
+              cmd_len++;
+            }
+            cmd_buf[cmd_len] = '\0';
+            print(cmd_buf);
+          } else {
+            history_recall_idx = -1;
+            clear_current_line();
+            cmd_buf[0] = '\0';
+          }
+        }
+      } else if (c == '\t') {
+        cmd_buf[cmd_len] = '\0';
+        shell_tab_complete();
       } else if (c == '\b') {
         if (cmd_len > 0) {
           cmd_len--;

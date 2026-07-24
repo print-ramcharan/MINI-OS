@@ -10,12 +10,12 @@ static inline uint8_t inb(uint16_t port) {
 
 unsigned char kbdus[128] = {
     0,   27,   '1',  '2', '3',  '4', '5', '6', '7', '8', '9', '0', '-',
-    '=', '\b', ' ',  'q', 'w',  'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
+    '=', '\b', '\t', 'q', 'w',  'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
     '[', ']',  '\n', 0,   'a',  's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
     ';', '\'', '`',  0,   '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',',
     '.', '/',  0,    '*', 0,    ' ', 0,   19,  0,   0,   0,   0,   0,
-    0,   0,    0,    0,   0,    0,   0,   0,   0,   '-', 0,   0,   0,
-    '+', 0,    0,    0,   0,    0,   0,   0,   0,   0,   0,   0};
+    0,   0,    0,    0,   0,    0,   0,   17,  0,   '-', 0,   0,   0,
+    '+', 0,    18,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
 #define KEYBOARD_BUFFER_SIZE 128
 static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
@@ -48,7 +48,9 @@ static void keyboard_callback(registers_t *regs) {
     // key press
     char c = kbdus[scancode];
     if (c != 0) {
-      terminal_putchar(c);
+      if (c >= 32 || c == '\n' || c == '\b') {
+        terminal_putchar(c);
+      }
       keyboard_buffer_push(c);
     }
   }
