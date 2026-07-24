@@ -763,7 +763,21 @@ static void clear_current_line(void) {
     cmd_len--;
   }
 }
-
+static void get_filename_prefix(const char *buffer, char *cmd, char *file_prefix) {
+  int i = 0, j = 0;
+  while (buffer[i] && buffer[i] != ' ') {
+    cmd[j++] = buffer[i++];
+  }
+  cmd[j] = '\0';
+  if (buffer[i] == ' ') {
+    i++;
+  }
+  j = 0;
+  while (buffer[i]) {
+    file_prefix[j++] = buffer[i++];
+  }
+  file_prefix[j] = '\0';
+}
 void shell_tab_complete(void) {
   if (cmd_len == 0) return;
   int match_count = 0;
