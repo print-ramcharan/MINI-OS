@@ -670,6 +670,12 @@ void execute_command(const char *cmd) {
     } else {
       print("  [FAIL] Test 5: History push/filter failed\n");
     }
+    // Test 6: Auto-completion prefix match check
+    if (starts_with("he", "help") && !starts_with("he", "clear")) {
+      print("  [PASS] Test 6: Prefix matching logic verified\n");
+    } else {
+      print("  [FAIL] Test 6: Prefix matching logic failed\n");
+    }
     print("  [VERIFY] Environment export context verification finalized.\n");
     print("  [VERIFY] Nested execution and recursion limits finalized.\n");
     print("  [VERIFY] Init script execution engine self-tests successfully completed.\n");
